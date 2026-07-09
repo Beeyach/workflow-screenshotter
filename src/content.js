@@ -1,4 +1,6 @@
-(async function main() {
+// Defines the capture entry point; started by src/starter.js (toolbar click)
+// or the floating button from src/button.js.
+window.__ghlShotStart = async function main() {
   if (window.__ghlShotRunning) return;
   window.__ghlShotRunning = true;
 
@@ -257,4 +259,4 @@
     restore();
     overlay.toast(`GHL Screenshotter: ${err.message}`);
   }
-})();
+};

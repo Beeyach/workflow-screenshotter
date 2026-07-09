@@ -4,7 +4,7 @@ chrome.action.onClicked.addListener(async (tab) => {
     // allFrames: the GHL workflow builder lives in a cross-origin iframe on
     // *.leadconnectorhq.com (host_permissions grants access to it).
     target: { tabId: tab.id, allFrames: true },
-    files: ["src/geometry.js", "src/naming.js", "src/overlay.js", "src/content.js"],
+    files: ["src/geometry.js", "src/naming.js", "src/overlay.js", "src/content.js", "src/starter.js"],
   });
 });
 
