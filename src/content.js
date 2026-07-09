@@ -1,10 +1,233 @@
-console.log("[ghl-shot] content script injected");
-chrome.runtime.sendMessage({ type: "GHLSHOT_CAPTURE" }, (res) => {
-  if (chrome.runtime.lastError) {
-    console.error("[ghl-shot] capture failed:", chrome.runtime.lastError.message);
-  } else if (res && res.ok) {
-    console.log("[ghl-shot] capture ok, dataUrl length:", res.dataUrl.length);
-  } else {
-    console.error("[ghl-shot] capture error:", res && res.error);
+(async function main() {
+  if (window.__ghlShotRunning) return;
+  window.__ghlShotRunning = true;
+
+  const G = window.GhlShotGeometry;
+  const N = window.GhlShotNaming;
+  const overlay = window.GhlShotOverlay;
+
+  // All GHL-DOM-dependent knobs live here (see design spec: selectors are
+  // isolated for easy patching when GHL changes its builder).
+  const CONFIG = {
+    // Selectors tried first when locating the pan/zoom container; tuned in the
+    // live-DOM discovery task. The generic heuristic below is the fallback.
+    candidateSelectors: [],
+    // Floating UI inside the clip area to hide during capture (minimap, zoom
+    // buttons); populated during the live-DOM discovery task.
+    hideSelectors: [],
+    // Optional selector for the workflow-name element; null = use document.title.
+    nameSelector: null,
+    // Elements larger than this on either axis are ignored when measuring
+    // workflow bounds (filters out full-canvas background layers).
+    maxNodeSize: 5000,
+    // Wait after each pan before capturing so the canvas repaints fully.
+    settleMs: 150,
+    // Gap between captures; chrome throttles captureVisibleTab at ~2/sec.
+    captureDelayMs: 600,
+    // Browsers cap canvas dimensions around 16384px; stay under it.
+    maxCanvasSide: 16000,
+  };
+
+  const state = { cancelled: false };
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
-});
+
+  function nextFrames(n) {
+    return new Promise((resolve) => {
+      function step(remaining) {
+        if (remaining <= 0) return resolve();
+        requestAnimationFrame(() => step(remaining - 1));
+      }
+      step(n);
+    });
+  }
+
+  function findPanContainer() {
+    for (const sel of CONFIG.candidateSelectors) {
+      const el = document.querySelector(sel);
+      if (el) return el;
+    }
+    // Heuristic fallback: the CSS-transformed element with the most
+    // descendants is the pan/zoom layer holding the workflow.
+    let best = null;
+    let bestCount = 0;
+    for (const el of document.querySelectorAll("*")) {
+      if (getComputedStyle(el).transform === "none") continue;
+      const count = el.querySelectorAll("*").length;
+      if (count > bestCount) {
+        best = el;
+        bestCount = count;
+      }
+    }
+    return bestCount >= 10 ? best : null;
+  }
+
+  function findClipRect(container) {
+    const viewport = { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
+    let el = container.parentElement;
+    while (el && el !== document.body) {
+      const style = getComputedStyle(el);
+      if (/(hidden|clip|auto|scroll)/.test(style.overflow + style.overflowX + style.overflowY)) {
+        const r = el.getBoundingClientRect();
+        const clip = G.intersectRects(
+          { x: r.left, y: r.top, width: r.width, height: r.height },
+          viewport
+        );
+        if (clip) return clip;
+      }
+      el = el.parentElement;
+    }
+    return viewport;
+  }
+
+  function measureScreenBounds(container) {
+    const rects = [];
+    for (const el of container.querySelectorAll("*")) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      if (r.width > CONFIG.maxNodeSize || r.height > CONFIG.maxNodeSize) continue;
+      rects.push({ x: r.left, y: r.top, width: r.width, height: r.height });
+    }
+    return G.computeUnionBounds(rects);
+  }
+
+  function getWorkflowName() {
+    if (CONFIG.nameSelector) {
+      const el = document.querySelector(CONFIG.nameSelector);
+      if (el && el.textContent.trim()) return el.textContent.trim();
+    }
+    return document.title;
+  }
+
+  function captureTile() {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage({ type: "GHLSHOT_CAPTURE" }, (res) => {
+        if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+        if (!res || !res.ok) return reject(new Error(res ? res.error : "no response"));
+        resolve(res.dataUrl);
+      });
+    });
+  }
+
+  async function captureTileWithRetry() {
+    try {
+      return await captureTile();
+    } catch (_err) {
+      await sleep(700); // one retry after backing off past the throttle window
+      return await captureTile();
+    }
+  }
+
+  function loadImage(dataUrl) {
+    const img = new Image();
+    img.src = dataUrl;
+    return img.decode().then(() => img);
+  }
+
+  const container = findPanContainer();
+  if (!container) {
+    overlay.toast("GHL Screenshotter: no workflow canvas found — open a workflow first.");
+    window.__ghlShotRunning = false;
+    return;
+  }
+
+  const savedTransform = container.style.transform;
+  const savedTransition = container.style.transition;
+  const hidden = [];
+  let finished = false;
+
+  function restore() {
+    if (finished) return;
+    finished = true;
+    container.style.transform = savedTransform;
+    container.style.transition = savedTransition;
+    for (const item of hidden) item.el.style.visibility = item.visibility;
+    overlay.remove();
+    window.__ghlShotRunning = false;
+  }
+
+  overlay.show();
+  overlay.onCancel(() => {
+    state.cancelled = true;
+  });
+
+  try {
+    for (const sel of CONFIG.hideSelectors) {
+      for (const el of document.querySelectorAll(sel)) {
+        hidden.push({ el, visibility: el.style.visibility });
+        el.style.visibility = "hidden";
+      }
+    }
+
+    // Identity transform = 100% zoom, no pan: measure everything from here.
+    container.style.transition = "none";
+    container.style.transform = "none";
+    await nextFrames(2);
+
+    const originRect = container.getBoundingClientRect();
+    const origin = { x: originRect.left, y: originRect.top };
+    const screenBounds = measureScreenBounds(container);
+    if (!screenBounds) throw new Error("workflow appears to be empty.");
+    const bounds = G.relativeBounds(screenBounds, origin);
+
+    const viewRect = findClipRect(container);
+    const dpr = window.devicePixelRatio;
+    const outScale = G.computeOutputScale(bounds, dpr, CONFIG.maxCanvasSide);
+    const tiles = G.computeTileGrid(bounds, viewRect.width, viewRect.height);
+
+    const outCanvas = document.createElement("canvas");
+    outCanvas.width = Math.round(bounds.width * dpr * outScale);
+    outCanvas.height = Math.round(bounds.height * dpr * outScale);
+    const ctx = outCanvas.getContext("2d");
+
+    if (outScale < 1) {
+      overlay.setProgress("Workflow is huge — output will be scaled down to fit browser limits.");
+      await sleep(1500);
+    }
+
+    for (let i = 0; i < tiles.length; i++) {
+      if (state.cancelled) throw new Error("cancelled.");
+      const tile = tiles[i];
+      overlay.setProgress(`Capturing tile ${i + 1} of ${tiles.length}… (Esc to cancel)`);
+
+      const t = G.computeTranslate(tile, origin, viewRect);
+      container.style.transform = `translate(${t.tx}px, ${t.ty}px)`;
+      await nextFrames(2);
+      await sleep(CONFIG.settleMs);
+
+      overlay.hideForCapture();
+      await nextFrames(2);
+      let dataUrl;
+      try {
+        dataUrl = await captureTileWithRetry();
+      } finally {
+        overlay.showAfterCapture();
+      }
+
+      const img = await loadImage(dataUrl);
+      const d = G.computeDrawRects(tile, bounds, viewRect, dpr, outScale);
+      ctx.drawImage(img, d.sx, d.sy, d.sw, d.sh, d.dx, d.dy, d.dw, d.dh);
+
+      await sleep(CONFIG.captureDelayMs);
+    }
+
+    overlay.setProgress("Stitching and saving…");
+    const blob = await new Promise((resolve) => outCanvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("failed to encode PNG (image may be too large).");
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = N.makeFilename(getWorkflowName(), new Date());
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+    restore();
+    overlay.toast("Workflow screenshot saved to Downloads.");
+  } catch (err) {
+    restore();
+    overlay.toast(`GHL Screenshotter: ${err.message}`);
+  }
+})();
