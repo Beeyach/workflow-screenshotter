@@ -11,14 +11,20 @@ window.__ghlShotStart = async function main() {
   // All GHL-DOM-dependent knobs live here (see design spec: selectors are
   // isolated for easy patching when GHL changes its builder).
   const CONFIG = {
-    // Selectors tried first when locating the pan/zoom container; tuned in the
-    // live-DOM discovery task. The generic heuristic below is the fallback.
-    candidateSelectors: [],
-    // Floating UI inside the clip area to hide during capture (minimap, zoom
-    // buttons); populated during the live-DOM discovery task.
-    hideSelectors: [],
-    // Optional selector for the workflow-name element; null = use document.title.
-    nameSelector: null,
+    // GHL's builder is Vue Flow: the pan/zoom layer is .vue-flow__viewport.
+    // The generic heuristic below is the fallback if GHL restructures.
+    candidateSelectors: [".vue-flow__viewport"],
+    // Floating UI inside the clip area to hide during capture. All of GHL's
+    // builder chrome (minimap, zoom controls, +Add, shortcuts) are panels.
+    hideSelectors: [".vue-flow__panel"],
+    // The editable workflow-name heading in the builder header.
+    nameSelector: "#cmp-header__txt--edit-workflow-name",
+    // The builder's own zoom-to-fit control (last button in this panel).
+    // Clicking it forces Vue Flow to render every node (it virtualizes
+    // off-screen nodes, which would otherwise be missing from the capture).
+    fitPanelSelector: ".vue-flow__panel.bottom.left",
+    // Wait after zoom-to-fit for all nodes to render.
+    fitSettleMs: 400,
     // Elements larger than this on either axis are ignored when measuring
     // workflow bounds (filters out full-canvas background layers).
     maxNodeSize: 5000,
@@ -30,7 +36,7 @@ window.__ghlShotStart = async function main() {
     maxCanvasSide: 16000,
     // Shrink the usable capture area by this many px on every side, so
     // borders/shadows at the clip edge don't bleed into tile seams.
-    viewInset: 4,
+    viewInset: 16,
     // TEMPORARY (live tuning): also download a ghl-shot-debug.txt with
     // overlay-element and header info. Remove once CONFIG is finalized.
     debug: true,
@@ -172,6 +178,18 @@ window.__ghlShotStart = async function main() {
     return img.decode().then(() => img);
   }
 
+  async function fitView() {
+    const panel = document.querySelector(CONFIG.fitPanelSelector);
+    if (!panel) return false;
+    const buttons = panel.querySelectorAll("button, [role='button']");
+    const target = buttons.length ? buttons[buttons.length - 1] : panel.lastElementChild;
+    if (!target) return false;
+    target.click();
+    await nextFrames(2);
+    await sleep(CONFIG.fitSettleMs);
+    return true;
+  }
+
   const container = findPanContainer();
   if (!container) {
     // The builder lives in a cross-origin iframe on *.leadconnectorhq.com; this
@@ -187,6 +205,13 @@ window.__ghlShotStart = async function main() {
   }
   console.log("[ghl-shot] frame:", location.hostname, "| container:", container.tagName,
     container.id || "", String(container.className).slice(0, 100));
+
+  // Zoom-to-fit BEFORE saving state: Vue Flow virtualizes off-screen nodes,
+  // and fitting the view is what forces the whole workflow into the DOM. The
+  // node set then stays rendered while we pan via style override (Vue Flow's
+  // internal state never changes, so it never re-culls). Saving the transform
+  // after the fit also means we restore to a state Vue Flow agrees with.
+  await fitView();
 
   const savedTransform = container.style.transform;
   const savedTransition = container.style.transition;
