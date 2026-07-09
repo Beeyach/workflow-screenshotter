@@ -34,3 +34,45 @@ test("relativeBounds subtracts origin", () => {
   const r = G.relativeBounds({ x: 110, y: 220, width: 5, height: 6 }, { x: 100, y: 200 });
   assert.deepEqual(r, { x: 10, y: 20, width: 5, height: 6 });
 });
+
+test("computeTileGrid covers bounds with clipped edge tiles", () => {
+  const tiles = G.computeTileGrid({ x: 5, y: 7, width: 250, height: 120 }, 100, 100);
+  assert.equal(tiles.length, 6); // 3 cols x 2 rows
+  assert.deepEqual(tiles[0], { col: 0, row: 0, x: 5, y: 7, width: 100, height: 100 });
+  // last column is clipped to 50 wide, last row to 20 tall
+  assert.deepEqual(tiles[5], { col: 2, row: 1, x: 205, y: 107, width: 50, height: 20 });
+});
+
+test("computeTileGrid emits a single tile when bounds fit", () => {
+  const tiles = G.computeTileGrid({ x: 0, y: 0, width: 80, height: 90 }, 100, 100);
+  assert.equal(tiles.length, 1);
+  assert.deepEqual(tiles[0], { col: 0, row: 0, x: 0, y: 0, width: 80, height: 90 });
+});
+
+test("computeTranslate maps tile origin onto viewRect origin", () => {
+  // container origin sits at screen (300, 150); view rect starts at (280, 100).
+  // To show tile point (1000, 2000) at the view origin, the container must move
+  // to (280 - 1000, 100 - 2000) relative to its origin position.
+  const t = G.computeTranslate({ x: 1000, y: 2000 }, { x: 300, y: 150 }, { x: 280, y: 100 });
+  assert.deepEqual(t, { tx: 280 - 300 - 1000, ty: 100 - 150 - 2000 });
+});
+
+test("computeOutputScale is 1 when within cap", () => {
+  assert.equal(G.computeOutputScale({ width: 4000, height: 3000 }, 2, 16000), 1);
+});
+
+test("computeOutputScale shrinks oversized bounds", () => {
+  // 20000 * 2 = 40000 device px wide -> scale 16000/40000 = 0.4
+  assert.equal(G.computeOutputScale({ width: 20000, height: 1000 }, 2, 16000), 0.4);
+});
+
+test("computeDrawRects computes source crop and destination", () => {
+  const tile = { x: 105, y: 107, width: 50, height: 20 };
+  const bounds = { x: 5, y: 7, width: 250, height: 120 };
+  const viewRect = { x: 280, y: 100, width: 100, height: 100 };
+  const d = G.computeDrawRects(tile, bounds, viewRect, 2, 0.5);
+  assert.deepEqual(d, {
+    sx: 560, sy: 200, sw: 100, sh: 40,      // viewRect and tile size at dpr 2
+    dx: 100, dy: 100, dw: 50, dh: 20,       // (tile - bounds origin) * dpr * outScale
+  });
+});
