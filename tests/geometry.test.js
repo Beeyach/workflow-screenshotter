@@ -64,13 +64,37 @@ test("computeTranslate accounts for content scale", () => {
   assert.deepEqual(t, { tx: 280 - 300 - 2000, ty: 100 - 150 - 4000 });
 });
 
-test("computeOutputScale is 1 when within cap", () => {
-  assert.equal(G.computeOutputScale({ width: 4000, height: 3000 }, 2, 16000), 1);
+const BIG_AREA = 16384 * 16384;
+
+test("computeOutputScale is 1 when within caps", () => {
+  assert.equal(G.computeOutputScale({ width: 4000, height: 3000 }, 2, 16000, BIG_AREA), 1);
 });
 
-test("computeOutputScale shrinks oversized bounds", () => {
+test("computeOutputScale shrinks bounds oversized on a side", () => {
   // 20000 * 2 = 40000 device px wide -> scale 16000/40000 = 0.4
-  assert.equal(G.computeOutputScale({ width: 20000, height: 1000 }, 2, 16000), 0.4);
+  assert.equal(G.computeOutputScale({ width: 20000, height: 1000 }, 2, 16000, BIG_AREA), 0.4);
+});
+
+test("computeOutputScale shrinks bounds oversized by area", () => {
+  // 12000x12000 at dpr 2 = 24000x24000 = 576M px, area cap 268.4M px
+  // -> scale = sqrt(268435456 / 576000000) ~= 0.6827
+  const s = G.computeOutputScale({ width: 12000, height: 12000 }, 2, 32000, BIG_AREA);
+  assert.ok(Math.abs(s - Math.sqrt(BIG_AREA / (24000 * 24000))) < 1e-9);
+});
+
+test("computeEffectiveScale keeps target density for normal workflows", () => {
+  assert.equal(G.computeEffectiveScale({ width: 1500, height: 900 }, 2, 32000, BIG_AREA), 2);
+});
+
+test("computeEffectiveScale reduces density for very tall workflows", () => {
+  // 20000 tall: side cap 32000/20000 = 1.6 beats target 2
+  assert.equal(G.computeEffectiveScale({ width: 1500, height: 20000 }, 2, 32000, BIG_AREA), 1.6);
+});
+
+test("computeEffectiveScale respects the area cap", () => {
+  // 20000x20000: area cap sqrt(268435456/4e8) ~= 0.8192 beats side cap 1.6
+  const s = G.computeEffectiveScale({ width: 20000, height: 20000 }, 2, 32000, BIG_AREA);
+  assert.ok(Math.abs(s - Math.sqrt(BIG_AREA / (20000 * 20000))) < 1e-9);
 });
 
 test("computeDrawRects computes source crop and destination", () => {

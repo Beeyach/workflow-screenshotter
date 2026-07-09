@@ -28,12 +28,13 @@ window.GhlShotOverlay = (function () {
       "style",
       [
         "margin-top:80px",
-        "padding:12px 20px",
-        "border-radius:8px",
-        "background:#111",
+        "padding:12px 22px",
+        "border-radius:999px",
+        "background:linear-gradient(135deg,#312e81,#111)",
+        "border:1px solid rgba(160,120,255,0.55)",
         "color:#fff",
         "font:14px/1.4 system-ui,sans-serif",
-        "box-shadow:0 4px 16px rgba(0,0,0,0.4)",
+        "box-shadow:0 6px 24px rgba(0,0,0,0.45)",
       ].join(";")
     );
     progressEl.textContent = "Preparing capture… (Esc to cancel)";

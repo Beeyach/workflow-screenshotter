@@ -33,8 +33,10 @@ window.__ghlShotStart = async function main(opts) {
     settleMs: 150,
     // Gap between captures; chrome throttles captureVisibleTab at ~2/sec.
     captureDelayMs: 600,
-    // Browsers cap canvas dimensions around 16384px; stay under it.
-    maxCanvasSide: 16000,
+    // Chrome canvas caps: ~32767px per side and ~16384x16384 total area.
+    // Stay just under; density degrades only when a workflow exceeds these.
+    maxCanvasSide: 32000,
+    maxCanvasArea: 16384 * 16384,
     // Shrink the usable capture area by this many px on every side, so
     // borders/shadows at the clip edge don't bleed into tile seams.
     viewInset: 16,
@@ -289,28 +291,37 @@ window.__ghlShotStart = async function main(opts) {
     const dpr = probeImg.width / window.innerWidth;
     await sleep(CONFIG.captureDelayMs);
 
-    // Supersample when the screen delivers fewer physical px per CSS px than
-    // the target (e.g. browser zoomed out): scale the canvas up while tiling.
+    // Density the output can afford: the 2x target, reduced only as far as
+    // the browser's canvas caps require for this workflow's size.
+    const effectiveScale = G.computeEffectiveScale(
+      bounds, CONFIG.targetPixelRatio, CONFIG.maxCanvasSide, CONFIG.maxCanvasArea
+    );
+    // Supersample (or shrink, for enormous workflows) the canvas so tiles are
+    // captured at that density directly — no wasted tiles, no post-shrink blur.
     const captureScale = Math.min(
       CONFIG.maxCaptureScale,
-      Math.max(1, CONFIG.targetPixelRatio / dpr)
+      Math.max(0.4, effectiveScale / dpr)
     );
-    const outScale = G.computeOutputScale(bounds, captureScale * dpr, CONFIG.maxCanvasSide);
+    const outScale = G.computeOutputScale(
+      bounds, captureScale * dpr, CONFIG.maxCanvasSide, CONFIG.maxCanvasArea
+    );
     const tiles = G.computeTileGrid(
       bounds,
       viewRect.width / captureScale,
       viewRect.height / captureScale
     );
     console.log("[ghl-shot] bounds:", JSON.stringify(bounds), "| viewRect:", JSON.stringify(viewRect),
-      "| dpr:", dpr, "| captureScale:", captureScale, "| outScale:", outScale, "| tiles:", tiles.length);
+      "| dpr:", dpr, "| effectiveScale:", effectiveScale, "| captureScale:", captureScale,
+      "| outScale:", outScale, "| tiles:", tiles.length);
 
     const outCanvas = document.createElement("canvas");
     outCanvas.width = Math.round(bounds.width * captureScale * dpr * outScale);
     outCanvas.height = Math.round(bounds.height * captureScale * dpr * outScale);
     const ctx = outCanvas.getContext("2d");
 
-    if (outScale < 1) {
-      overlay.setProgress("Workflow is huge — output will be scaled down to fit browser limits.");
+    if (effectiveScale < CONFIG.targetPixelRatio * 0.95) {
+      const pct = Math.round((effectiveScale / CONFIG.targetPixelRatio) * 100);
+      overlay.setProgress(`Huge workflow — capturing at ${pct}% of full sharpness (browser canvas limit).`);
       await sleep(1500);
     }
 

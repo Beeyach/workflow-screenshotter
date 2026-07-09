@@ -63,8 +63,21 @@
     };
   }
 
-  function computeOutputScale(bounds, dpr, maxSide) {
-    return Math.min(1, maxSide / (bounds.width * dpr), maxSide / (bounds.height * dpr));
+  function computeOutputScale(bounds, dpr, maxSide, maxArea) {
+    const w = bounds.width * dpr;
+    const h = bounds.height * dpr;
+    return Math.min(1, maxSide / w, maxSide / h, Math.sqrt(maxArea / (w * h)));
+  }
+
+  // Physical px per workflow CSS px the output can afford: the target density,
+  // reduced only as far as the browser's canvas side/area caps require.
+  function computeEffectiveScale(bounds, targetScale, maxSide, maxArea) {
+    return Math.min(
+      targetScale,
+      maxSide / bounds.width,
+      maxSide / bounds.height,
+      Math.sqrt(maxArea / (bounds.width * bounds.height))
+    );
   }
 
   // dpr = captured physical px per screen CSS px; contentScale = supersampling
@@ -90,6 +103,7 @@
     computeTileGrid,
     computeTranslate,
     computeOutputScale,
+    computeEffectiveScale,
     computeDrawRects,
   };
 });
