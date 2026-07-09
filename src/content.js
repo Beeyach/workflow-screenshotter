@@ -38,6 +38,12 @@ window.__ghlShotStart = async function main(opts) {
     // Shrink the usable capture area by this many px on every side, so
     // borders/shadows at the clip edge don't bleed into tile seams.
     viewInset: 16,
+    // Target physical pixels per workflow CSS pixel in the output. When the
+    // screen delivers less (browser zoomed out / low-DPI display), the canvas
+    // is scaled UP during capture so text stays crisp.
+    targetPixelRatio: 2,
+    // Upper bound for that supersampling scale (more scale = more tiles).
+    maxCaptureScale: 3,
   };
 
   const state = { cancelled: false };
@@ -213,6 +219,7 @@ window.__ghlShotStart = async function main(opts) {
 
   const savedTransform = container.style.transform;
   const savedTransition = container.style.transition;
+  const savedTransformOrigin = container.style.transformOrigin;
   const hidden = [];
   let finished = false;
 
@@ -221,6 +228,7 @@ window.__ghlShotStart = async function main(opts) {
     finished = true;
     container.style.transform = savedTransform;
     container.style.transition = savedTransition;
+    container.style.transformOrigin = savedTransformOrigin;
     for (const item of hidden) item.el.style.visibility = item.visibility;
     overlay.remove();
     window.__ghlShotRunning = false;
@@ -242,7 +250,9 @@ window.__ghlShotStart = async function main(opts) {
     }
 
     // Identity transform = 100% zoom, no pan: measure everything from here.
+    // Origin 0 0 keeps the scale math simple during the tile pans below.
     container.style.transition = "none";
+    container.style.transformOrigin = "0 0";
     container.style.transform = "none";
     await nextFrames(2);
 
@@ -279,14 +289,24 @@ window.__ghlShotStart = async function main(opts) {
     const dpr = probeImg.width / window.innerWidth;
     await sleep(CONFIG.captureDelayMs);
 
-    const outScale = G.computeOutputScale(bounds, dpr, CONFIG.maxCanvasSide);
-    const tiles = G.computeTileGrid(bounds, viewRect.width, viewRect.height);
+    // Supersample when the screen delivers fewer physical px per CSS px than
+    // the target (e.g. browser zoomed out): scale the canvas up while tiling.
+    const captureScale = Math.min(
+      CONFIG.maxCaptureScale,
+      Math.max(1, CONFIG.targetPixelRatio / dpr)
+    );
+    const outScale = G.computeOutputScale(bounds, captureScale * dpr, CONFIG.maxCanvasSide);
+    const tiles = G.computeTileGrid(
+      bounds,
+      viewRect.width / captureScale,
+      viewRect.height / captureScale
+    );
     console.log("[ghl-shot] bounds:", JSON.stringify(bounds), "| viewRect:", JSON.stringify(viewRect),
-      "| dpr:", dpr, "| outScale:", outScale, "| tiles:", tiles.length);
+      "| dpr:", dpr, "| captureScale:", captureScale, "| outScale:", outScale, "| tiles:", tiles.length);
 
     const outCanvas = document.createElement("canvas");
-    outCanvas.width = Math.round(bounds.width * dpr * outScale);
-    outCanvas.height = Math.round(bounds.height * dpr * outScale);
+    outCanvas.width = Math.round(bounds.width * captureScale * dpr * outScale);
+    outCanvas.height = Math.round(bounds.height * captureScale * dpr * outScale);
     const ctx = outCanvas.getContext("2d");
 
     if (outScale < 1) {
@@ -299,8 +319,8 @@ window.__ghlShotStart = async function main(opts) {
       const tile = tiles[i];
       overlay.setProgress(`Capturing tile ${i + 1} of ${tiles.length}… (Esc to cancel)`);
 
-      const t = G.computeTranslate(tile, origin, viewRect);
-      container.style.transform = `translate(${t.tx}px, ${t.ty}px)`;
+      const t = G.computeTranslate(tile, origin, viewRect, captureScale);
+      container.style.transform = `translate(${t.tx}px, ${t.ty}px) scale(${captureScale})`;
       await nextFrames(2);
       await sleep(CONFIG.settleMs);
 
@@ -314,7 +334,7 @@ window.__ghlShotStart = async function main(opts) {
       }
 
       const img = await loadImage(dataUrl);
-      const d = G.computeDrawRects(tile, bounds, viewRect, dpr, outScale);
+      const d = G.computeDrawRects(tile, bounds, viewRect, dpr, captureScale, outScale);
       ctx.drawImage(img, d.sx, d.sy, d.sw, d.sh, d.dx, d.dy, d.dw, d.dh);
 
       await sleep(CONFIG.captureDelayMs);

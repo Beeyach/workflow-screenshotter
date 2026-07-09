@@ -54,24 +54,32 @@
     return tiles;
   }
 
-  function computeTranslate(tile, origin, viewRect) {
-    return { tx: viewRect.x - origin.x - tile.x, ty: viewRect.y - origin.y - tile.y };
+  // scale = content scale factor applied via `translate(...) scale(s)` with
+  // transform-origin 0 0: content point p lands at origin + t + s*p.
+  function computeTranslate(tile, origin, viewRect, scale) {
+    return {
+      tx: viewRect.x - origin.x - tile.x * scale,
+      ty: viewRect.y - origin.y - tile.y * scale,
+    };
   }
 
   function computeOutputScale(bounds, dpr, maxSide) {
     return Math.min(1, maxSide / (bounds.width * dpr), maxSide / (bounds.height * dpr));
   }
 
-  function computeDrawRects(tile, bounds, viewRect, dpr, outScale) {
+  // dpr = captured physical px per screen CSS px; contentScale = supersampling
+  // scale applied to the canvas during capture; outScale = shrink factor to
+  // stay under the browser's max canvas size.
+  function computeDrawRects(tile, bounds, viewRect, dpr, contentScale, outScale) {
     return {
       sx: viewRect.x * dpr,
       sy: viewRect.y * dpr,
-      sw: tile.width * dpr,
-      sh: tile.height * dpr,
-      dx: (tile.x - bounds.x) * dpr * outScale,
-      dy: (tile.y - bounds.y) * dpr * outScale,
-      dw: tile.width * dpr * outScale,
-      dh: tile.height * dpr * outScale,
+      sw: tile.width * contentScale * dpr,
+      sh: tile.height * contentScale * dpr,
+      dx: (tile.x - bounds.x) * contentScale * dpr * outScale,
+      dy: (tile.y - bounds.y) * contentScale * dpr * outScale,
+      dw: tile.width * contentScale * dpr * outScale,
+      dh: tile.height * contentScale * dpr * outScale,
     };
   }
 
