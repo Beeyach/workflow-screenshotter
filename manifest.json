@@ -5,7 +5,10 @@
   "description": "Capture a full-resolution screenshot of an entire GoHighLevel workflow.",
   "action": { "default_title": "Capture workflow screenshot" },
   "permissions": ["activeTab", "scripting"],
-  "host_permissions": ["https://*.leadconnectorhq.com/*"],
+  "host_permissions": [
+    "https://*.leadconnectorhq.com/*",
+    "https://app.gohighlevel.com/*"
+  ],
   "content_scripts": [
     {
       "matches": ["https://client-app-automation-workflows.leadconnectorhq.com/*"],
