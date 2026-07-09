@@ -128,10 +128,19 @@
 
   const container = findPanContainer();
   if (!container) {
-    overlay.toast("GHL Screenshotter: no workflow canvas found — open a workflow first.");
+    // The builder lives in a cross-origin iframe on *.leadconnectorhq.com; this
+    // script runs in every frame. Only one frame should own the "not found" UX:
+    // the automation iframe itself, or a top frame with no embedded GHL app.
+    const isAutomationFrame = location.hostname.includes("automation-workflows");
+    const hasEmbeddedApp = !!document.querySelector('iframe[src*="leadconnectorhq"]');
+    if (isAutomationFrame || (window === window.top && !hasEmbeddedApp)) {
+      overlay.toast("GHL Screenshotter: no workflow canvas found — open a workflow first.");
+    }
     window.__ghlShotRunning = false;
     return;
   }
+  console.log("[ghl-shot] frame:", location.hostname, "| container:", container.tagName,
+    container.id || "", String(container.className).slice(0, 100));
 
   const savedTransform = container.style.transform;
   const savedTransition = container.style.transition;
@@ -173,9 +182,27 @@
     const bounds = G.relativeBounds(screenBounds, origin);
 
     const viewRect = findClipRect(container);
-    const dpr = window.devicePixelRatio;
+
+    // Calibration probe: one throwaway capture to measure the true ratio of
+    // captured pixels to this frame's CSS pixels (covers devicePixelRatio AND
+    // browser zoom, and verifies capture actually works before panning).
+    overlay.setProgress("Calibrating…");
+    overlay.hideForCapture();
+    await nextFrames(2);
+    let probeUrl;
+    try {
+      probeUrl = await captureTileWithRetry();
+    } finally {
+      overlay.showAfterCapture();
+    }
+    const probeImg = await loadImage(probeUrl);
+    const dpr = probeImg.width / window.innerWidth;
+    await sleep(CONFIG.captureDelayMs);
+
     const outScale = G.computeOutputScale(bounds, dpr, CONFIG.maxCanvasSide);
     const tiles = G.computeTileGrid(bounds, viewRect.width, viewRect.height);
+    console.log("[ghl-shot] bounds:", JSON.stringify(bounds), "| viewRect:", JSON.stringify(viewRect),
+      "| dpr:", dpr, "| outScale:", outScale, "| tiles:", tiles.length);
 
     const outCanvas = document.createElement("canvas");
     outCanvas.width = Math.round(bounds.width * dpr * outScale);
