@@ -196,6 +196,40 @@ window.__ghlShotStart = async function main(opts) {
     return true;
   }
 
+  // Vue Flow ANIMATES fit-view, re-writing the transform every frame for a
+  // while. Anything we set during that window gets overwritten — so wait
+  // until the computed transform holds still before touching it.
+  async function waitForStableTransform(el, timeoutMs) {
+    let last = getComputedStyle(el).transform;
+    let stable = 0;
+    const start = performance.now();
+    while (performance.now() - start < timeoutMs) {
+      await nextFrames(1);
+      const cur = getComputedStyle(el).transform;
+      if (cur === last) {
+        stable++;
+        if (stable >= 5) return true;
+      } else {
+        stable = 0;
+        last = cur;
+      }
+    }
+    return false;
+  }
+
+  // Set the identity transform and VERIFY it took effect (retrying if the
+  // builder re-asserted its own transform), so bounds are measured at true
+  // 100% zoom rather than whatever zoom the animation left behind.
+  async function forceIdentityTransform(el) {
+    for (let i = 0; i < 10; i++) {
+      el.style.transform = "none";
+      await nextFrames(2);
+      const cur = getComputedStyle(el).transform;
+      if (cur === "none" || cur === "matrix(1, 0, 0, 1, 0, 0)") return true;
+    }
+    return false;
+  }
+
   const container = findPanContainer();
   if (!container) {
     // The builder lives in a cross-origin iframe on *.leadconnectorhq.com; this
@@ -218,6 +252,7 @@ window.__ghlShotStart = async function main(opts) {
   // internal state never changes, so it never re-culls). Saving the transform
   // after the fit also means we restore to a state Vue Flow agrees with.
   await fitView();
+  await waitForStableTransform(container, 2500);
 
   const savedTransform = container.style.transform;
   const savedTransition = container.style.transition;
@@ -255,8 +290,9 @@ window.__ghlShotStart = async function main(opts) {
     // Origin 0 0 keeps the scale math simple during the tile pans below.
     container.style.transition = "none";
     container.style.transformOrigin = "0 0";
-    container.style.transform = "none";
-    await nextFrames(2);
+    if (!(await forceIdentityTransform(container))) {
+      throw new Error("the builder keeps overriding the canvas — try again in a moment.");
+    }
 
     const originRect = container.getBoundingClientRect();
     const origin = { x: originRect.left, y: originRect.top };
@@ -331,9 +367,15 @@ window.__ghlShotStart = async function main(opts) {
       overlay.setProgress(`Capturing tile ${i + 1} of ${tiles.length}… (Esc to cancel)`);
 
       const t = G.computeTranslate(tile, origin, viewRect, captureScale);
-      container.style.transform = `translate(${t.tx}px, ${t.ty}px) scale(${captureScale})`;
+      const tileTransform = `translate(${t.tx}px, ${t.ty}px) scale(${captureScale})`;
+      container.style.transform = tileTransform;
       await nextFrames(2);
       await sleep(CONFIG.settleMs);
+      if (container.style.transform !== tileTransform) {
+        container.style.transform = tileTransform;
+        await nextFrames(2);
+        await sleep(CONFIG.settleMs);
+      }
 
       overlay.hideForCapture();
       await nextFrames(2);
