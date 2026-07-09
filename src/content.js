@@ -1,8 +1,9 @@
 // Defines the capture entry point; started by src/starter.js (toolbar click)
 // or the floating button from src/button.js.
-window.__ghlShotStart = async function main() {
+window.__ghlShotStart = async function main(opts) {
   if (window.__ghlShotRunning) return;
   window.__ghlShotRunning = true;
+  const runDebug = !!(opts && opts.debug);
 
   const G = window.GhlShotGeometry;
   const N = window.GhlShotNaming;
@@ -37,9 +38,6 @@ window.__ghlShotStart = async function main() {
     // Shrink the usable capture area by this many px on every side, so
     // borders/shadows at the clip edge don't bleed into tile seams.
     viewInset: 16,
-    // TEMPORARY (live tuning): also download a ghl-shot-debug.txt with
-    // overlay-element and header info. Remove once CONFIG is finalized.
-    debug: true,
   };
 
   const state = { cancelled: false };
@@ -261,7 +259,7 @@ window.__ghlShotStart = async function main() {
       width: rawClip.width - 2 * CONFIG.viewInset,
       height: rawClip.height - 2 * CONFIG.viewInset,
     };
-    if (CONFIG.debug) {
+    if (runDebug) {
       downloadText("ghl-shot-debug.txt", JSON.stringify(collectDebugInfo(container, rawClip), null, 1));
     }
 

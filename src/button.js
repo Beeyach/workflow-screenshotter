@@ -28,8 +28,9 @@
       "padding:0",
     ].join(";")
   );
-  btn.addEventListener("click", () => {
-    if (window.__ghlShotStart) window.__ghlShotStart();
+  btn.addEventListener("click", (e) => {
+    // Alt-click also downloads a ghl-shot-debug.txt for troubleshooting.
+    if (window.__ghlShotStart) window.__ghlShotStart({ debug: e.altKey });
   });
   document.documentElement.appendChild(btn);
 })();
