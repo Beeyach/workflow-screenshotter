@@ -28,6 +28,12 @@ window.__ghlShotStart = async function main() {
     captureDelayMs: 600,
     // Browsers cap canvas dimensions around 16384px; stay under it.
     maxCanvasSide: 16000,
+    // Shrink the usable capture area by this many px on every side, so
+    // borders/shadows at the clip edge don't bleed into tile seams.
+    viewInset: 4,
+    // TEMPORARY (live tuning): also download a ghl-shot-debug.txt with
+    // overlay-element and header info. Remove once CONFIG is finalized.
+    debug: true,
   };
 
   const state = { cancelled: false };
@@ -103,6 +109,44 @@ window.__ghlShotStart = async function main() {
     return document.title;
   }
 
+  function downloadText(filename, text) {
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
+  function collectDebugInfo(container, clipRect) {
+    const overlays = [];
+    for (const el of document.querySelectorAll("body *")) {
+      if (container.contains(el)) continue;
+      const st = getComputedStyle(el);
+      if (st.position !== "fixed" && st.position !== "sticky" && st.position !== "absolute") continue;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      if (!G.intersectRects({ x: r.left, y: r.top, width: r.width, height: r.height }, clipRect)) continue;
+      if (r.width > clipRect.width * 0.9 && r.height > clipRect.height * 0.9) continue;
+      overlays.push({
+        tag: el.tagName,
+        id: el.id || null,
+        cls: String(el.className).slice(0, 140),
+        pos: st.position,
+        rect: { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) },
+      });
+      if (overlays.length >= 80) break;
+    }
+    const headers = [];
+    for (const el of document.querySelectorAll('header, [class*="header"], [class*="topbar"], [class*="title"]')) {
+      const text = (el.innerText || "").trim().slice(0, 160);
+      if (text) headers.push({ tag: el.tagName, id: el.id || null, cls: String(el.className).slice(0, 140), text });
+      if (headers.length >= 12) break;
+    }
+    return { url: location.href, title: document.title, overlays, headers };
+  }
+
   function captureTile() {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type: "GHLSHOT_CAPTURE" }, (res) => {
@@ -165,7 +209,9 @@ window.__ghlShotStart = async function main() {
   });
 
   try {
-    for (const sel of CONFIG.hideSelectors) {
+    // Our own floating button must never appear in the capture.
+    const hideTargets = ["#ghl-shot-button"].concat(CONFIG.hideSelectors);
+    for (const sel of hideTargets) {
       for (const el of document.querySelectorAll(sel)) {
         hidden.push({ el, visibility: el.style.visibility });
         el.style.visibility = "hidden";
@@ -183,7 +229,16 @@ window.__ghlShotStart = async function main() {
     if (!screenBounds) throw new Error("workflow appears to be empty.");
     const bounds = G.relativeBounds(screenBounds, origin);
 
-    const viewRect = findClipRect(container);
+    const rawClip = findClipRect(container);
+    const viewRect = {
+      x: rawClip.x + CONFIG.viewInset,
+      y: rawClip.y + CONFIG.viewInset,
+      width: rawClip.width - 2 * CONFIG.viewInset,
+      height: rawClip.height - 2 * CONFIG.viewInset,
+    };
+    if (CONFIG.debug) {
+      downloadText("ghl-shot-debug.txt", JSON.stringify(collectDebugInfo(container, rawClip), null, 1));
+    }
 
     // Calibration probe: one throwaway capture to measure the true ratio of
     // captured pixels to this frame's CSS pixels (covers devicePixelRatio AND
