@@ -8,6 +8,7 @@ window.__ghlShotStart = async function main(opts) {
   const G = window.GhlShotGeometry;
   const N = window.GhlShotNaming;
   const overlay = window.GhlShotOverlay;
+  const settings = await window.GhlShotSettings.load();
 
   // All GHL-DOM-dependent knobs live here (see design spec: selectors are
   // isolated for easy patching when GHL changes its builder).
@@ -42,10 +43,10 @@ window.__ghlShotStart = async function main(opts) {
     viewInset: 16,
     // Target physical pixels per workflow CSS pixel in the output. When the
     // screen delivers less (browser zoomed out / low-DPI display), the canvas
-    // is scaled UP during capture so text stays crisp.
-    targetPixelRatio: 2,
+    // is scaled UP during capture so text stays crisp. User-configurable.
+    targetPixelRatio: settings.targetPixelRatio,
     // Upper bound for that supersampling scale (more scale = more tiles).
-    maxCaptureScale: 3,
+    maxCaptureScale: Math.max(3, settings.targetPixelRatio),
   };
 
   const state = { cancelled: false };
@@ -265,7 +266,7 @@ window.__ghlShotStart = async function main(opts) {
   // internal state never changes, so it never re-culls). Saving the transform
   // after the fit also means we restore to a state Vue Flow agrees with.
   try {
-    await fitView();
+    if (settings.fitBeforeCapture) await fitView();
     await waitForStableTransform(container, 2500);
   } catch (err) {
     console.error("[ghl-shot] fit-view failed:", err);
@@ -299,7 +300,9 @@ window.__ghlShotStart = async function main(opts) {
 
   try {
     // Our own floating button must never appear in the capture.
-    const hideTargets = ["#ghl-shot-button"].concat(CONFIG.hideSelectors);
+    const hideTargets = ["#ghl-shot-button"].concat(
+      settings.hideBuilderUi ? CONFIG.hideSelectors : []
+    );
     for (const sel of hideTargets) {
       for (const el of document.querySelectorAll(sel)) {
         hidden.push({ el, visibility: el.style.visibility });
@@ -421,13 +424,24 @@ window.__ghlShotStart = async function main(opts) {
     }
 
     overlay.setProgress("Stitching and saving…");
-    const blob = await new Promise((resolve) => outCanvas.toBlob(resolve, "image/png"));
-    if (!blob) throw new Error("failed to encode PNG (image may be too large).");
+    const isJpeg = settings.format === "jpeg";
+    const mime = isJpeg ? "image/jpeg" : "image/png";
+    if (isJpeg) {
+      // JPEG has no alpha: paint white behind, else transparency turns black.
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+      ctx.globalCompositeOperation = "source-over";
+    }
+    const blob = await new Promise((resolve) =>
+      outCanvas.toBlob(resolve, mime, isJpeg ? settings.jpegQuality : undefined)
+    );
+    if (!blob) throw new Error("failed to encode image (it may be too large).");
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = N.makeFilename(getWorkflowName(), new Date());
+    a.download = N.makeFilename(getWorkflowName(), new Date(), isJpeg ? "jpg" : "png");
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
 

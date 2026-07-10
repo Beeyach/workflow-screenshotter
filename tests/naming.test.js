@@ -20,3 +20,10 @@ test("makeFilename falls back to 'workflow' for empty names", () => {
   assert.equal(N.makeFilename("///", new Date(2026, 11, 31)), "workflow_2026-12-31.png");
   assert.equal(N.makeFilename("", new Date(2026, 11, 31)), "workflow_2026-12-31.png");
 });
+
+test("makeFilename honours the extension argument", () => {
+  assert.equal(
+    N.makeFilename("Lead Nurture", new Date(2026, 6, 9), "jpg"),
+    "Lead Nurture_2026-07-09.jpg"
+  );
+});

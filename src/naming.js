@@ -6,7 +6,7 @@
     root.GhlShotNaming = api;
   }
 })(typeof self !== "undefined" ? self : this, function () {
-  function makeFilename(workflowName, date) {
+  function makeFilename(workflowName, date, ext) {
     const cleaned = (workflowName || "")
       .replace(/[<>:"/\\|?*\x00-\x1f]/g, " ")
       .replace(/\s+/g, " ")
@@ -15,7 +15,7 @@
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, "0");
     const dd = String(date.getDate()).padStart(2, "0");
-    return `${base}_${yyyy}-${mm}-${dd}.png`;
+    return `${base}_${yyyy}-${mm}-${dd}.${ext || "png"}`;
   }
 
   return { makeFilename };

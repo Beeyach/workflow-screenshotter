@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --bw-primary: #6366f1;
+        --bw-accent: #c052f5;
+        --bw-gradient: linear-gradient(135deg, var(--bw-primary), var(--bw-accent));
+        --bw-text: #1f2333;
+        --bw-muted: #6b7280;
+        --bw-line: #e8e8f0;
+      }
+      * { box-sizing: border-box; }
+      body {
+        width: 300px;
+        margin: 0;
+        font: 13px/1.45 system-ui, -apple-system, sans-serif;
+        color: var(--bw-text);
+        background: #fff;
+      }
+      header {
+        background: var(--bw-gradient);
+        color: #fff;
+        padding: 14px 16px;
+      }
+      header h1 { font-size: 14px; margin: 0; font-weight: 600; }
+      header p { margin: 2px 0 0; font-size: 11px; opacity: 0.85; }
+      main { padding: 14px 16px 6px; }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 0;
+        border-bottom: 1px solid var(--bw-line);
+      }
+      .row:last-of-type { border-bottom: none; }
+      .label { font-weight: 500; }
+      .hint { font-size: 11px; color: var(--bw-muted); margin-top: 1px; }
+      select {
+        font: inherit;
+        padding: 4px 6px;
+        border: 1px solid var(--bw-line);
+        border-radius: 6px;
+        background: #fff;
+      }
+      input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--bw-primary); }
+      #capture {
+        width: 100%;
+        margin-top: 12px;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        background: var(--bw-gradient);
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      #capture:disabled { opacity: 0.55; cursor: default; }
+      #status { min-height: 16px; margin-top: 8px; font-size: 11px; color: var(--bw-muted); text-align: center; }
+      footer {
+        padding: 10px 16px 12px;
+        border-top: 1px solid var(--bw-line);
+        text-align: center;
+      }
+      footer a { color: var(--bw-primary); text-decoration: none; font-weight: 500; }
+      footer a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Workflow Screenshotter</h1>
+      <p>Capture an entire workflow as one image</p>
+    </header>
+    <main>
+      <div class="row">
+        <div>
+          <div class="label">Quality</div>
+          <div class="hint">Higher is sharper but slower</div>
+        </div>
+        <select id="targetPixelRatio">
+          <option value="1">Standard (1x)</option>
+          <option value="2">High (2x)</option>
+          <option value="3">Maximum (3x)</option>
+        </select>
+      </div>
+      <div class="row">
+        <div>
+          <div class="label">Format</div>
+          <div class="hint">PNG is lossless</div>
+        </div>
+        <select id="format">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+        </select>
+      </div>
+      <div class="row">
+        <div>
+          <div class="label">Hide builder controls</div>
+          <div class="hint">Keeps the minimap out of the image</div>
+        </div>
+        <input type="checkbox" id="hideBuilderUi" />
+      </div>
+      <div class="row">
+        <div>
+          <div class="label">Fit view first</div>
+          <div class="hint">Needed to include off-screen steps</div>
+        </div>
+        <input type="checkbox" id="fitBeforeCapture" />
+      </div>
+      <button id="capture">Capture workflow</button>
+      <div id="status"></div>
+    </main>
+    <footer>
+      <a id="site" href="#" target="_blank" rel="noopener">bloomwired.com</a>
+    </footer>
+    <script src="../src/settings.js"></script>
+    <script src="../src/brand.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
