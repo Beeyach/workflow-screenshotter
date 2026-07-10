@@ -11,7 +11,7 @@
     '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
     '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>' +
     '<circle cx="12" cy="13" r="4"/></svg>';
-  const baseShadow = "0 4px 14px rgba(124,58,237,0.45)";
+  const baseShadow = "0 4px 14px rgba(20,20,28,0.4)";
   btn.setAttribute(
     "style",
     [
@@ -24,7 +24,7 @@
       "height:48px",
       "border-radius:50%",
       "border:none",
-      "background:linear-gradient(135deg,#6366f1,#c052f5)",
+      "background:linear-gradient(135deg,#14141c,#5e3e58)",
       "display:flex",
       "align-items:center",
       "justify-content:center",
@@ -36,7 +36,7 @@
   );
   btn.addEventListener("mouseenter", () => {
     btn.style.transform = "scale(1.12)";
-    btn.style.boxShadow = "0 6px 20px rgba(124,58,237,0.6)";
+    btn.style.boxShadow = "0 6px 20px rgba(94,62,88,0.55)";
   });
   btn.addEventListener("mouseleave", () => {
     btn.style.transform = "scale(1)";

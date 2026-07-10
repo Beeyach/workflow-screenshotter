@@ -4,12 +4,15 @@
     <meta charset="utf-8" />
     <style>
       :root {
-        --bw-primary: #6366f1;
-        --bw-accent: #c052f5;
-        --bw-gradient: linear-gradient(135deg, var(--bw-primary), var(--bw-accent));
-        --bw-text: #1f2333;
-        --bw-muted: #6b7280;
-        --bw-line: #e8e8f0;
+        --bw-ink: #14141c;
+        --bw-plum: #5e3e58;
+        --bw-mauve: #b48ead;
+        --bw-primary: var(--bw-plum);
+        --bw-gradient: linear-gradient(135deg, var(--bw-ink), var(--bw-plum));
+        --bw-surface: #f7f3f6;
+        --bw-text: #14141c;
+        --bw-muted: #3a3545;
+        --bw-line: #e2dce0;
       }
       * { box-sizing: border-box; }
       body {
@@ -25,7 +28,7 @@
         padding: 14px 16px;
       }
       header h1 { font-size: 14px; margin: 0; font-weight: 600; }
-      header p { margin: 2px 0 0; font-size: 11px; opacity: 0.85; }
+      header p { margin: 2px 0 0; font-size: 11px; color: var(--bw-mauve); }
       main { padding: 14px 16px 6px; }
       .row {
         display: flex;
@@ -45,14 +48,14 @@
         border-radius: 6px;
         background: #fff;
       }
-      input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--bw-primary); }
+      input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--bw-plum); }
       #capture {
         width: 100%;
         margin-top: 12px;
         padding: 10px;
         border: none;
         border-radius: 8px;
-        background: var(--bw-gradient);
+        background: var(--bw-ink);
         color: #fff;
         font: inherit;
         font-weight: 600;

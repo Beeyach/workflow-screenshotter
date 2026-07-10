@@ -1,10 +1,17 @@
-# Generates icons/icon{16,32,48,128}.png — purple gradient rounded square
-# with a white camera glyph. Run: powershell -File scripts\make-icons.ps1
+# Generates icons/icon{16,32,48,128}.png in Bloomwired brand colors:
+# ink rounded square, mauve camera glyph, blush "bloom" flash dot.
+# Run: powershell -File scripts\make-icons.ps1
 Add-Type -AssemblyName System.Drawing
 
 $root = Split-Path $PSScriptRoot -Parent
 $outDir = Join-Path $root "icons"
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
+
+# Brand palette (keep in sync with src/brand.js)
+$INK   = [System.Drawing.Color]::FromArgb(255, 20, 20, 28)    # #14141c
+$PLUM  = [System.Drawing.Color]::FromArgb(255, 94, 62, 88)    # #5e3e58
+$MAUVE = [System.Drawing.Color]::FromArgb(255, 180, 142, 173) # #b48ead
+$BLUSH = [System.Drawing.Color]::FromArgb(255, 245, 227, 227) # #f5e3e3
 
 function New-RoundedPath([float]$x, [float]$y, [float]$w, [float]$h, [float]$r) {
   $p = New-Object System.Drawing.Drawing2D.GraphicsPath
@@ -17,48 +24,40 @@ function New-RoundedPath([float]$x, [float]$y, [float]$w, [float]$h, [float]$r) 
   return $p
 }
 
-# --- Draw the master 128px icon ---
 $size = 128
 $bmp = New-Object System.Drawing.Bitmap($size, $size)
 $g = [System.Drawing.Graphics]::FromImage($bmp)
 $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
 
-# Background: rounded square, indigo -> violet gradient
+# Background: ink -> plum diagonal gradient
 $bgRect = New-Object System.Drawing.Rectangle(4, 4, 120, 120)
-$bgBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
-  $bgRect,
-  [System.Drawing.Color]::FromArgb(255, 99, 102, 241),   # indigo #6366f1
-  [System.Drawing.Color]::FromArgb(255, 192, 82, 245),   # violet #c052f5
-  35.0
-)
+$bgBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush($bgRect, $INK, $PLUM, 35.0)
 $bgPath = New-RoundedPath 4 4 120 120 28
 $g.FillPath($bgBrush, $bgPath)
 
-$white = [System.Drawing.Brushes]::White
+$mauveBrush = New-Object System.Drawing.SolidBrush($MAUVE)
+$blushBrush = New-Object System.Drawing.SolidBrush($BLUSH)
 
-# Camera top notch (viewfinder bump)
+# Camera viewfinder bump + body, in mauve
 $notch = New-RoundedPath 46 30 36 18 6
-$g.FillPath($white, $notch)
-
-# Camera body
+$g.FillPath($mauveBrush, $notch)
 $body = New-RoundedPath 22 40 84 58 12
-$g.FillPath($white, $body)
+$g.FillPath($mauveBrush, $body)
 
-# Lens: outer ring is background gradient showing through
+# Lens: ink ring cut out of the body, blush centre (the "bloom" dot)
 $lensOuter = New-Object System.Drawing.Drawing2D.GraphicsPath
 $lensOuter.AddEllipse(45, 50, 38, 38)
 $g.FillPath($bgBrush, $lensOuter)
 $lensInner = New-Object System.Drawing.Drawing2D.GraphicsPath
 $lensInner.AddEllipse(53, 58, 22, 22)
-$g.FillPath($white, $lensInner)
+$g.FillPath($blushBrush, $lensInner)
 
 # Flash dot
-$g.FillEllipse($white, 92, 47, 8, 8)
+$g.FillEllipse($blushBrush, 92, 47, 8, 8)
 
 $g.Dispose()
 $bmp.Save((Join-Path $outDir "icon128.png"), [System.Drawing.Imaging.ImageFormat]::Png)
 
-# --- Downscale to the other sizes ---
 foreach ($s in 48, 32, 16) {
   $small = New-Object System.Drawing.Bitmap($s, $s)
   $gs = [System.Drawing.Graphics]::FromImage($small)
