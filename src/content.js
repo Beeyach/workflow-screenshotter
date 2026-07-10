@@ -325,9 +325,7 @@ window.__ghlShotStart = async function main(opts) {
       width: rawClip.width - 2 * CONFIG.viewInset,
       height: rawClip.height - 2 * CONFIG.viewInset,
     };
-    if (runDebug) {
-      downloadText("ghl-shot-debug.txt", JSON.stringify(collectDebugInfo(container, rawClip), null, 1));
-    }
+    const debugInfo = runDebug ? collectDebugInfo(container, rawClip) : null;
 
     // Calibration probe: one throwaway capture to measure the true ratio of
     // captured pixels to this frame's CSS pixels (covers devicePixelRatio AND
@@ -372,6 +370,23 @@ window.__ghlShotStart = async function main(opts) {
     outCanvas.width = Math.round(bounds.width * captureScale * dpr * outScale);
     outCanvas.height = Math.round(bounds.height * captureScale * dpr * outScale);
     const ctx = outCanvas.getContext("2d");
+
+    if (debugInfo) {
+      debugInfo.capture = {
+        bounds,
+        viewRect,
+        dpr,
+        effectiveScale,
+        captureScale,
+        outScale,
+        tiles: tiles.length,
+        outputPx: { w: outCanvas.width, h: outCanvas.height },
+        // The number that matters: physical px per workflow CSS px. 2 = sharp.
+        finalDensity: captureScale * dpr * outScale,
+        canvasTransformAtMeasure: getComputedStyle(container).transform,
+      };
+      downloadText("ghl-shot-debug.txt", JSON.stringify(debugInfo, null, 1));
+    }
 
     if (effectiveScale < CONFIG.targetPixelRatio * 0.95) {
       const pct = Math.round((effectiveScale / CONFIG.targetPixelRatio) * 100);
