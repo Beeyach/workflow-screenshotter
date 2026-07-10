@@ -27,8 +27,12 @@ window.__ghlShotStart = async function main(opts) {
     fitPanelSelector: ".vue-flow__panel.bottom.left",
     // Wait after zoom-to-fit for all nodes to render.
     fitSettleMs: 400,
-    // Elements larger than this on either axis are ignored when measuring
-    // workflow bounds (filters out full-canvas background layers).
+    // Vue Flow's node elements — the authoritative extent of the workflow.
+    nodeSelector: ".vue-flow__node",
+    // Breathing room around the outermost nodes, in workflow CSS px.
+    boundsPadding: 40,
+    // Fallback scan only: elements larger than this on either axis are ignored
+    // when measuring workflow bounds (filters out full-canvas background layers).
     maxNodeSize: 5000,
     // Wait after each pan before capturing so the canvas repaints fully.
     settleMs: 150,
@@ -103,15 +107,63 @@ window.__ghlShotStart = async function main(opts) {
     return viewport;
   }
 
+  function rectOf(el) {
+    const r = el.getBoundingClientRect();
+    return { x: r.left, y: r.top, width: r.width, height: r.height };
+  }
+
+  // Preferred: measure the workflow from Vue Flow's own node elements. The
+  // generic descendant scan below picks up viewport-sized background/edge
+  // layers, which pin the bounds to one screenful — see measureDiagnostics.
+  function measureNodeBounds(container) {
+    const nodes = container.querySelectorAll(CONFIG.nodeSelector);
+    if (nodes.length < 1) return null;
+    const rects = [];
+    for (const el of nodes) {
+      const r = rectOf(el);
+      if (r.width === 0 || r.height === 0) continue;
+      rects.push(r);
+    }
+    const union = G.computeUnionBounds(rects);
+    if (!union) return null;
+    const p = CONFIG.boundsPadding;
+    return { x: union.x - p, y: union.y - p, width: union.width + 2 * p, height: union.height + 2 * p };
+  }
+
   function measureScreenBounds(container) {
     const rects = [];
     for (const el of container.querySelectorAll("*")) {
-      const r = el.getBoundingClientRect();
+      const r = rectOf(el);
       if (r.width === 0 || r.height === 0) continue;
       if (r.width > CONFIG.maxNodeSize || r.height > CONFIG.maxNodeSize) continue;
-      rects.push({ x: r.left, y: r.top, width: r.width, height: r.height });
+      rects.push(r);
     }
     return G.computeUnionBounds(rects);
+  }
+
+  // Why bounds came out the way they did — written into the alt-click dump.
+  function measureDiagnostics(container) {
+    const all = [...container.querySelectorAll("*")];
+    const biggest = all
+      .map((el) => ({ el, r: rectOf(el) }))
+      .sort((a, b) => b.r.width * b.r.height - a.r.width * a.r.height)
+      .slice(0, 6)
+      .map(({ el, r }) => ({
+        tag: el.tagName,
+        cls: String(el.className.baseVal !== undefined ? el.className.baseVal : el.className).slice(0, 60),
+        w: Math.round(r.width),
+        h: Math.round(r.height),
+      }));
+    const nodes = container.querySelectorAll(CONFIG.nodeSelector);
+    return {
+      containerCls: String(container.className).slice(0, 80),
+      descendantCount: all.length,
+      nodeSelector: CONFIG.nodeSelector,
+      nodeCount: nodes.length,
+      biggestDescendants: biggest,
+      nodeBounds: measureNodeBounds(container),
+      heuristicBounds: measureScreenBounds(container),
+    };
   }
 
   function getWorkflowName() {
@@ -317,7 +369,8 @@ window.__ghlShotStart = async function main(opts) {
 
     const originRect = container.getBoundingClientRect();
     const origin = { x: originRect.left, y: originRect.top };
-    const screenBounds = measureScreenBounds(container);
+    const diagnostics = runDebug ? measureDiagnostics(container) : null;
+    const screenBounds = measureNodeBounds(container) || measureScreenBounds(container);
     if (!screenBounds) throw new Error("workflow appears to be empty.");
     const bounds = G.relativeBounds(screenBounds, origin);
 
@@ -387,6 +440,7 @@ window.__ghlShotStart = async function main(opts) {
         // The number that matters: physical px per workflow CSS px. 2 = sharp.
         finalDensity: captureScale * dpr * outScale,
         canvasTransformAtMeasure: getComputedStyle(container).transform,
+        measure: diagnostics,
       };
       downloadText("ghl-shot-debug.txt", JSON.stringify(debugInfo, null, 1));
     }
