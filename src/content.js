@@ -217,17 +217,30 @@ window.__ghlShotStart = async function main(opts) {
     return false;
   }
 
-  // Set the identity transform and VERIFY it took effect (retrying if the
-  // builder re-asserted its own transform), so bounds are measured at true
-  // 100% zoom rather than whatever zoom the animation left behind.
-  async function forceIdentityTransform(el) {
-    for (let i = 0; i < 10; i++) {
-      el.style.transform = "none";
-      await nextFrames(2);
-      const cur = getComputedStyle(el).transform;
-      if (cur === "none" || cur === "matrix(1, 0, 0, 1, 0, 0)") return true;
+  // Vue Flow binds the viewport transform reactively, so an inline style we
+  // set gets overwritten on its next re-render. A stylesheet rule marked
+  // !important outranks Vue's (non-important) inline style and survives every
+  // re-render — this is how we hold the canvas still while tiling.
+  const OVERRIDE_ATTR = "data-ghl-shot-capture";
+  let styleEl = null;
+
+  function setCanvasTransform(el, transformCss) {
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      document.head.appendChild(styleEl);
+      el.setAttribute(OVERRIDE_ATTR, "1");
     }
-    return false;
+    styleEl.textContent =
+      `[${OVERRIDE_ATTR}] {` +
+      `transform: ${transformCss} !important;` +
+      `transform-origin: 0 0 !important;` +
+      `transition: none !important;}`;
+  }
+
+  function clearCanvasTransform(el) {
+    if (styleEl) styleEl.remove();
+    styleEl = null;
+    el.removeAttribute(OVERRIDE_ATTR);
   }
 
   const container = findPanContainer();
@@ -251,8 +264,15 @@ window.__ghlShotStart = async function main(opts) {
   // node set then stays rendered while we pan via style override (Vue Flow's
   // internal state never changes, so it never re-culls). Saving the transform
   // after the fit also means we restore to a state Vue Flow agrees with.
-  await fitView();
-  await waitForStableTransform(container, 2500);
+  try {
+    await fitView();
+    await waitForStableTransform(container, 2500);
+  } catch (err) {
+    console.error("[ghl-shot] fit-view failed:", err);
+    overlay.toast(`GHL Screenshotter: ${err.message}`);
+    window.__ghlShotRunning = false;
+    return;
+  }
 
   const savedTransform = container.style.transform;
   const savedTransition = container.style.transition;
@@ -263,6 +283,7 @@ window.__ghlShotStart = async function main(opts) {
   function restore() {
     if (finished) return;
     finished = true;
+    clearCanvasTransform(container);
     container.style.transform = savedTransform;
     container.style.transition = savedTransition;
     container.style.transformOrigin = savedTransformOrigin;
@@ -288,11 +309,8 @@ window.__ghlShotStart = async function main(opts) {
 
     // Identity transform = 100% zoom, no pan: measure everything from here.
     // Origin 0 0 keeps the scale math simple during the tile pans below.
-    container.style.transition = "none";
-    container.style.transformOrigin = "0 0";
-    if (!(await forceIdentityTransform(container))) {
-      throw new Error("the builder keeps overriding the canvas — try again in a moment.");
-    }
+    setCanvasTransform(container, "none");
+    await nextFrames(2);
 
     const originRect = container.getBoundingClientRect();
     const origin = { x: originRect.left, y: originRect.top };
@@ -367,15 +385,9 @@ window.__ghlShotStart = async function main(opts) {
       overlay.setProgress(`Capturing tile ${i + 1} of ${tiles.length}… (Esc to cancel)`);
 
       const t = G.computeTranslate(tile, origin, viewRect, captureScale);
-      const tileTransform = `translate(${t.tx}px, ${t.ty}px) scale(${captureScale})`;
-      container.style.transform = tileTransform;
+      setCanvasTransform(container, `translate(${t.tx}px, ${t.ty}px) scale(${captureScale})`);
       await nextFrames(2);
       await sleep(CONFIG.settleMs);
-      if (container.style.transform !== tileTransform) {
-        container.style.transform = tileTransform;
-        await nextFrames(2);
-        await sleep(CONFIG.settleMs);
-      }
 
       overlay.hideForCapture();
       await nextFrames(2);
@@ -408,6 +420,10 @@ window.__ghlShotStart = async function main(opts) {
     overlay.toast("Workflow screenshot saved to Downloads.");
   } catch (err) {
     restore();
+    console.error("[ghl-shot] capture failed:", err);
     overlay.toast(`GHL Screenshotter: ${err.message}`);
+  } finally {
+    // Belt and braces: never leave the button dead if restore() was skipped.
+    window.__ghlShotRunning = false;
   }
 };

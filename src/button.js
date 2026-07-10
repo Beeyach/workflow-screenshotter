@@ -44,7 +44,11 @@
   });
   btn.addEventListener("click", (e) => {
     // Alt-click also downloads a ghl-shot-debug.txt for troubleshooting.
-    if (window.__ghlShotStart) window.__ghlShotStart({ debug: e.altKey });
+    if (!window.__ghlShotStart) return;
+    Promise.resolve(window.__ghlShotStart({ debug: e.altKey })).catch((err) => {
+      console.error("[ghl-shot] start failed:", err);
+      window.__ghlShotRunning = false;
+    });
   });
   document.documentElement.appendChild(btn);
 })();
