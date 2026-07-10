@@ -24,6 +24,8 @@
     "https://*.leadconnectorhq.com/*",
     "https://app.gohighlevel.com/*"
   ],
+  "//optional_host_permissions": "captureVisibleTab needs activeTab (toolbar click) or <all_urls>. Users who want the in-page button to capture on its own opt into this from the popup.",
+  "optional_host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
       "matches": ["https://client-app-automation-workflows.leadconnectorhq.com/*"],

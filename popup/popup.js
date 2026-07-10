@@ -9,6 +9,24 @@ function isBuilderTab(tab) {
   return !!tab && /\/automation\/workflow\//.test(tab.url || "");
 }
 
+// Chrome grants screenshot access only via activeTab (a toolbar click) unless
+// the extension holds <all_urls>. Opting in here is what lets the in-page
+// camera button capture on its own.
+const ALL_URLS = { origins: ["<all_urls>"] };
+
+async function initOneClick() {
+  const box = document.getElementById("oneClick");
+  box.checked = await chrome.permissions.contains(ALL_URLS);
+  box.addEventListener("change", async () => {
+    const granted = box.checked
+      ? await chrome.permissions.request(ALL_URLS)
+      : !(await chrome.permissions.remove(ALL_URLS));
+    box.checked = granted;
+    statusEl.textContent = granted ? "One-click capture on." : "One-click capture off.";
+    setTimeout(() => (statusEl.textContent = ""), 1600);
+  });
+}
+
 async function init() {
   const site = document.getElementById("site");
   site.href = BRAND.website;
@@ -21,6 +39,7 @@ async function init() {
     else el.value = String(values[key]);
     el.addEventListener("change", onChange);
   }
+  await initOneClick();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!isBuilderTab(tab)) {
