@@ -1,7 +1,7 @@
 const S = window.GhlShotSettings;
 const BRAND = window.GhlShotBrand;
 
-const FIELDS = ["targetPixelRatio", "format", "hideBuilderUi", "fitBeforeCapture"];
+const FIELDS = ["targetPixelRatio", "format"];
 const statusEl = document.getElementById("status");
 const captureBtn = document.getElementById("capture");
 

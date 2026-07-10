@@ -63,6 +63,15 @@
       }
       #capture:disabled { opacity: 0.55; cursor: default; }
       #status { min-height: 16px; margin-top: 8px; font-size: 11px; color: var(--bw-muted); text-align: center; }
+      .note {
+        margin: 4px 0 2px;
+        font-size: 11px;
+        line-height: 1.4;
+        color: var(--bw-muted);
+        background: var(--bw-surface);
+        border-radius: 6px;
+        padding: 8px 10px;
+      }
       footer {
         padding: 10px 16px 12px;
         border-top: 1px solid var(--bw-line);
@@ -80,41 +89,31 @@
     <main>
       <div class="row">
         <div>
-          <div class="label">Quality</div>
-          <div class="hint">Higher is sharper but slower</div>
+          <div class="label">Sharpness</div>
+          <div class="hint">Crisper text, larger file, slower capture</div>
         </div>
         <select id="targetPixelRatio">
-          <option value="1">Standard (1x)</option>
-          <option value="2">High (2x)</option>
-          <option value="3">Maximum (3x)</option>
+          <option value="1">Normal</option>
+          <option value="2">Sharp</option>
+          <option value="3">Sharpest</option>
         </select>
       </div>
       <div class="row">
         <div>
-          <div class="label">Format</div>
-          <div class="hint">PNG is lossless</div>
+          <div class="label">File type</div>
+          <div class="hint">PNG for docs, JPEG for smaller files</div>
         </div>
         <select id="format">
           <option value="png">PNG</option>
           <option value="jpeg">JPEG</option>
         </select>
       </div>
-      <div class="row">
-        <div>
-          <div class="label">Hide builder controls</div>
-          <div class="hint">Keeps the minimap out of the image</div>
-        </div>
-        <input type="checkbox" id="hideBuilderUi" />
-      </div>
-      <div class="row">
-        <div>
-          <div class="label">Fit view first</div>
-          <div class="hint">Needed to include off-screen steps</div>
-        </div>
-        <input type="checkbox" id="fitBeforeCapture" />
-      </div>
       <button id="capture">Capture workflow</button>
       <div id="status"></div>
+      <p class="note">
+        Captures every step, including those off screen. The minimap and zoom
+        controls are always left out.
+      </p>
     </main>
     <footer>
       <a id="site" href="#" target="_blank" rel="noopener">bloomwired.com</a>

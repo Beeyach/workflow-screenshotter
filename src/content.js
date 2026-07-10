@@ -49,8 +49,10 @@ window.__ghlShotStart = async function main(opts) {
     // screen delivers less (browser zoomed out / low-DPI display), the canvas
     // is scaled UP during capture so text stays crisp. User-configurable.
     targetPixelRatio: settings.targetPixelRatio,
-    // Upper bound for that supersampling scale (more scale = more tiles).
-    maxCaptureScale: Math.max(3, settings.targetPixelRatio),
+    // Upper bound for that supersampling scale. Tile count grows with the
+    // square of this, so it trades capture time for zoomed-out-screen support:
+    // 6 keeps full sharpness down to ~33% browser zoom on a 1x display.
+    maxCaptureScale: Math.max(6, settings.targetPixelRatio),
   };
 
   const state = { cancelled: false };
@@ -318,7 +320,7 @@ window.__ghlShotStart = async function main(opts) {
   // internal state never changes, so it never re-culls). Saving the transform
   // after the fit also means we restore to a state Vue Flow agrees with.
   try {
-    if (settings.fitBeforeCapture) await fitView();
+    await fitView();
     await waitForStableTransform(container, 2500);
   } catch (err) {
     console.error("[ghl-shot] fit-view failed:", err);
@@ -351,10 +353,8 @@ window.__ghlShotStart = async function main(opts) {
   });
 
   try {
-    // Our own floating button must never appear in the capture.
-    const hideTargets = ["#ghl-shot-button"].concat(
-      settings.hideBuilderUi ? CONFIG.hideSelectors : []
-    );
+    // Our own floating button and the builder's chrome must never appear.
+    const hideTargets = ["#ghl-shot-button"].concat(CONFIG.hideSelectors);
     for (const sel of hideTargets) {
       for (const el of document.querySelectorAll(sel)) {
         hidden.push({ el, visibility: el.style.visibility });
@@ -445,10 +445,17 @@ window.__ghlShotStart = async function main(opts) {
       downloadText("ghl-shot-debug.txt", JSON.stringify(debugInfo, null, 1));
     }
 
-    if (effectiveScale < CONFIG.targetPixelRatio * 0.95) {
-      const pct = Math.round((effectiveScale / CONFIG.targetPixelRatio) * 100);
-      overlay.setProgress(`Huge workflow — capturing at ${pct}% of full sharpness (browser canvas limit).`);
-      await sleep(1500);
+    // Warn on the density actually achieved, which the supersampling cap can
+    // limit too (very zoomed-out screens), not just the canvas-size cap.
+    const achievedDensity = captureScale * dpr * outScale;
+    if (achievedDensity < CONFIG.targetPixelRatio * 0.95) {
+      const pct = Math.round((achievedDensity / CONFIG.targetPixelRatio) * 100);
+      const why =
+        effectiveScale < CONFIG.targetPixelRatio * 0.95
+          ? "this workflow is near the browser's maximum image size"
+          : "the browser is zoomed out a long way — zoom in for a sharper capture";
+      overlay.setProgress(`Capturing at ${pct}% of target sharpness — ${why}.`);
+      await sleep(2000);
     }
 
     for (let i = 0; i < tiles.length; i++) {

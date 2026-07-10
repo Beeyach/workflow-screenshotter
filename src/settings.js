@@ -7,15 +7,14 @@
     root.GhlShotSettings = api;
   }
 })(typeof self !== "undefined" ? self : this, function () {
+  // Only genuine user preferences live here. Hiding the builder's minimap and
+  // zoom controls, and fitting the view before measuring, are always-on
+  // requirements for a clean, complete capture — not choices.
   const DEFAULTS = {
     // Physical px per workflow CSS px. 2 = sharp, 3 = sharpest (slower).
     targetPixelRatio: 2,
     format: "png", // "png" | "jpeg"
     jpegQuality: 0.92,
-    // Hide the builder's minimap/zoom controls so they aren't baked in.
-    hideBuilderUi: true,
-    // Zoom-to-fit first so off-screen nodes render (needed for big workflows).
-    fitBeforeCapture: true,
   };
 
   function load() {
