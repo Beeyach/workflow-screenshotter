@@ -1,10 +1,11 @@
 # Workflow Screenshotter
 
-A Chrome extension that captures an entire automation workflow — the whole
+A Chrome extension that captures an entire GoHighLevel workflow — the whole
 pan/zoom canvas, not just the visible screen — as a single image.
 
-Free, no account, no tracking. Compatible with the HighLevel™ workflow builder,
-including whitelabel domains. Not affiliated with or endorsed by HighLevel, Inc.
+Free, no account, no tracking. Works **only** with the HighLevel™ workflow
+builder (including whitelabel domains) — not with Zapier, Make, n8n, or other
+automation tools. Not affiliated with or endorsed by HighLevel, Inc.
 
 ## Why
 

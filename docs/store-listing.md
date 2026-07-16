@@ -19,20 +19,30 @@ the name itself stays plain and searchable.
 ## Short description (132 char max)
 
 ```
-Capture an entire automation workflow as one image — including the steps scrolled off screen. Free, no account, no tracking.
+Capture an entire GoHighLevel workflow as one image — including the steps scrolled off screen. Free, no account, no tracking.
 ```
+
+Say "GoHighLevel" plainly rather than a vague "automation workflow". This only
+works on the HighLevel workflow builder, and a description that implies Zapier,
+Make, or n8n support earns one-star reviews from people it was never built for.
+Naming the product you're compatible with is nominative fair use; the name,
+branding, and disclaimer keep it clear this isn't an official HighLevel product.
 
 ## Detailed description
 
 ```
-Workflow builders put your automation on a canvas you can pan and zoom. Normal
-full-page screenshot tools only capture what fits on screen, so documenting a
-long workflow means stitching print-screens together by hand.
+The GoHighLevel workflow builder draws your automation on a canvas you can pan
+and zoom. Ordinary full-page screenshot tools only capture what fits on screen,
+so documenting a long workflow means stitching print-screens together by hand.
 
 This extension captures the whole thing in one click.
 
+WHERE IT WORKS
+Only on the GoHighLevel workflow builder, including whitelabel/agency domains.
+It does not work with Zapier, Make, n8n, or any other automation tool.
+
 HOW IT WORKS
-1. Open a workflow in your automation builder.
+1. Open a workflow in the GoHighLevel builder.
 2. Click the Workflow Screenshotter icon, then "Capture workflow".
 3. A single image lands in your Downloads, named after the workflow.
 
@@ -45,7 +55,7 @@ WHAT YOU GET
 PRIVACY
 • Nothing is collected, transmitted, or sold. There is no account and no analytics.
 • Capture happens entirely in your browser; the image goes straight to your Downloads.
-• Works only on the automation workflow builder — no other site is touched.
+• Runs only on the workflow builder page — no other site is touched.
 
 OPEN SOURCE
 Read every line before you install it:
@@ -69,7 +79,7 @@ Category: **Workflow & Planning**. Language: English.
 The store requires one narrow purpose. Ours:
 
 ```
-Capture the automation workflow builder's canvas as a single image file.
+Capture the GoHighLevel workflow builder's canvas as a single image file.
 ```
 
 ## Permission justifications
