@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<!--
+  Landing page for the Workflow Screenshotter extension.
+
+  BEFORE PUBLISHING, replace both placeholders:
+    STORE_URL_PENDING  -> the Chrome Web Store listing URL (after approval)
+  The GitHub links are already live.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Free GoHighLevel Workflow Screenshot Tool | Bloomwired</title>
+    <meta
+      name="description"
+      content="Capture an entire GoHighLevel workflow as one image, including the steps scrolled off screen. Free Chrome extension, no account, no tracking."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,16..72,400;0,16..72,500;1,16..72,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #14141c;
+        --ink-soft: #1c1c26;
+        --plum: #5e3e58;
+        --mauve: #b48ead;
+        --blush: #f5e3e3;
+        --surface: #f7f3f6;
+        --white: #fff;
+        --muted: #6b6472;
+        --line: #e4dde2;
+
+        --display: "Newsreader", Georgia, serif;
+        --body: "Inter", system-ui, -apple-system, sans-serif;
+
+        --pad: clamp(20px, 5vw, 64px);
+        --maxw: 1140px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        background: var(--surface);
+        color: var(--ink);
+        font-family: var(--body);
+        font-size: 17px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1, h2, h3 {
+        font-family: var(--display);
+        font-weight: 400;
+        letter-spacing: -0.015em;
+        line-height: 1.08;
+        margin: 0;
+      }
+      h1 { font-size: clamp(38px, 5.4vw, 62px); }
+      h2 { font-size: clamp(30px, 3.6vw, 42px); }
+      h3 { font-size: 20px; }
+      em { font-style: italic; color: var(--plum); }
+
+      p { margin: 0 0 1em; }
+      a { color: inherit; }
+
+      .wrap {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding-inline: var(--pad);
+      }
+
+      .eyebrow {
+        font-family: var(--body);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--plum);
+        margin: 0 0 14px;
+      }
+
+      /* ---------- nav ---------- */
+      nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-block: 22px;
+      }
+      .logo {
+        font-family: var(--display);
+        font-size: 19px;
+        text-decoration: none;
+        letter-spacing: -0.01em;
+      }
+      .logo b { font-weight: 500; }
+      .logo .bloom {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--mauve);
+        margin: 0 1px 2px;
+        vertical-align: middle;
+      }
+
+      /* ---------- buttons ---------- */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 13px 22px;
+        border-radius: 999px;
+        background: var(--ink);
+        color: var(--white);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+        border: 1px solid var(--ink);
+        transition: background 0.18s ease, transform 0.18s ease;
+      }
+      .btn:hover { background: var(--plum); border-color: var(--plum); transform: translateY(-1px); }
+      .btn.small { padding: 9px 17px; font-size: 14px; }
+      .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+      .btn.ghost:hover { background: var(--white); color: var(--ink); border-color: var(--ink); }
+      .btn.invert { background: var(--blush); color: var(--ink); border-color: var(--blush); }
+      .btn.invert:hover { background: var(--white); border-color: var(--white); }
+      :focus-visible { outline: 2px solid var(--mauve); outline-offset: 3px; }
+
+      /* ---------- hero ---------- */
+      .hero {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: clamp(28px, 5vw, 72px);
+        align-items: start;
+        padding-block: clamp(28px, 5vw, 60px) 0;
+      }
+      .hero-copy { padding-top: clamp(8px, 3vw, 40px); }
+      .hero p.lede {
+        font-size: 19px;
+        color: var(--muted);
+        max-width: 34ch;
+        margin-block: 22px 30px;
+      }
+      .cta-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+      .fineprint {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 16px;
+      }
+      .fineprint span { color: var(--line); margin-inline: 7px; }
+
+      /* ---------- the ribbon (signature) ---------- */
+      .capture {
+        position: relative;
+        /* Runs past the fold on purpose: the length is the argument. */
+        height: clamp(420px, 62vh, 620px);
+      }
+      /* The fade lives on an inner wrapper: a mask on .capture would also clip
+         the frame and its labels, which sit outside the ribbon's box. */
+      .ribbon-wrap {
+        height: 100%;
+        -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+        mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
+      }
+      .ribbon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 26px;
+        padding-top: 18px;
+      }
+      .node {
+        position: relative;
+        width: 208px;
+        background: var(--white);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 11px 12px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        box-shadow: 0 1px 2px rgba(20, 20, 28, 0.05);
+        animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+      }
+      .node::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        width: 1px;
+        height: 26px;
+        background: var(--line);
+      }
+      .node:last-child::after { display: none; }
+      .dot {
+        width: 17px;
+        height: 17px;
+        border-radius: 5px;
+        flex: none;
+        background: var(--mauve);
+      }
+      .dot.plum { background: var(--plum); }
+      .dot.blush { background: var(--blush); border: 1px solid var(--line); }
+      .bars { flex: 1; display: grid; gap: 4px; }
+      .bar { height: 5px; border-radius: 3px; background: #e9e3e8; }
+      .bar.short { width: 52%; }
+      .branch { display: flex; gap: 14px; }
+      .branch .node { width: 148px; }
+
+      .cut {
+        position: absolute;
+        left: -6%;
+        right: -6%;
+        top: 232px;
+        border-top: 1px dashed var(--mauve);
+        pointer-events: none;
+      }
+      .cut::before {
+        content: "a normal screenshot stops here";
+        position: absolute;
+        top: -9px;
+        left: 0;
+        transform: translateY(-100%);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--plum);
+        background: var(--surface);
+        padding-right: 10px;
+      }
+      .screen {
+        position: absolute;
+        left: -6%;
+        right: -6%;
+        top: 0;
+        height: 232px;
+        border: 1px solid var(--line);
+        border-bottom: none;
+        border-radius: 10px 10px 0 0;
+        background: rgba(255, 255, 255, 0.45);
+        pointer-events: none;
+      }
+      /* A sibling of the ribbon, not a child: anything inside .ribbon-wrap gets
+         clipped by its fade mask. Reads as a sequence with the cut label above:
+         the screen stops, the capture keeps going. */
+      .tag-captured {
+        position: absolute;
+        top: 292px;
+        left: -6%;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--mauve);
+        white-space: nowrap;
+        pointer-events: none;
+      }
+
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(9px); }
+        to { opacity: 1; transform: none; }
+      }
+
+      /* ---------- sections ---------- */
+      section { padding-block: clamp(56px, 8vw, 104px); }
+      .sec-head { max-width: 46ch; margin-bottom: clamp(28px, 4vw, 48px); }
+      .sec-head p { color: var(--muted); margin-top: 16px; }
+
+      .dark {
+        background: var(--ink);
+        color: var(--blush);
+      }
+      .dark h2 { color: var(--white); }
+      .dark em { color: var(--mauve); }
+      .dark p { color: #b9b2be; }
+      .dark .eyebrow { color: var(--mauve); }
+
+      /* ---------- steps ---------- */
+      .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+      .step { background: var(--surface); padding: 26px 24px 30px; }
+      .step .num {
+        font-family: var(--display);
+        font-size: 15px;
+        color: var(--mauve);
+        display: block;
+        margin-bottom: 12px;
+      }
+      .step h3 { margin-bottom: 7px; }
+      .step p { color: var(--muted); font-size: 15px; margin: 0; }
+
+      /* ---------- uses ---------- */
+      .uses { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 30px; padding: 0; margin: 0; list-style: none; }
+      .uses li {
+        padding: 15px 0;
+        border-top: 1px solid var(--line);
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+      }
+      .uses li::before {
+        content: "";
+        width: 5px; height: 5px; border-radius: 50%;
+        background: var(--mauve);
+        flex: none;
+        transform: translateY(-2px);
+      }
+
+      /* ---------- privacy ---------- */
+      .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 12px; }
+      .fact { border-top: 1px solid #2e2e3a; padding-top: 18px; }
+      .fact strong {
+        display: block;
+        font-family: var(--display);
+        font-size: 27px;
+        font-weight: 400;
+        color: var(--white);
+        margin-bottom: 6px;
+      }
+      .fact span { font-size: 14px; color: #b9b2be; }
+
+      /* ---------- faq ---------- */
+      .faq { border-top: 1px solid var(--line); }
+      details { border-bottom: 1px solid var(--line); }
+      summary {
+        cursor: pointer;
+        padding: 19px 34px 19px 0;
+        font-weight: 500;
+        list-style: none;
+        position: relative;
+      }
+      summary::-webkit-details-marker { display: none; }
+      summary::after {
+        content: "+";
+        position: absolute;
+        right: 4px;
+        top: 17px;
+        font-size: 19px;
+        color: var(--mauve);
+      }
+      details[open] summary::after { content: "\2013"; }
+      details p { color: var(--muted); margin: 0 0 19px; max-width: 62ch; }
+
+      /* ---------- closing ---------- */
+      .close-cta { text-align: center; }
+      .close-cta p { color: var(--muted); max-width: 42ch; margin-inline: auto; }
+      .agency {
+        border-top: 1px solid var(--line);
+        padding-block: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .agency p { margin: 0; color: var(--muted); max-width: 48ch; font-size: 15px; }
+      .agency a { color: var(--plum); font-weight: 500; }
+
+      footer {
+        padding-block: 28px 44px;
+        font-size: 12.5px;
+        color: var(--muted);
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      footer a { color: var(--muted); }
+
+      /* ---------- responsive ---------- */
+      @media (max-width: 900px) {
+        .hero { grid-template-columns: 1fr; }
+        .capture { height: 400px; order: 2; }
+        .steps, .facts { grid-template-columns: 1fr; }
+        .steps { border-radius: 10px; }
+        .uses { grid-template-columns: 1fr; }
+        .cut::before { font-size: 10px; }
+        .below::before { display: none; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { animation: none !important; transition: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav>
+        <a class="logo" href="https://bloomwired.io"
+          >bl<span class="bloom"></span><b>mwired</b></a
+        >
+        <a class="btn small" href="STORE_URL_PENDING">Add to Chrome</a>
+      </nav>
+
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Free Chrome extension</p>
+          <h1>Screenshot a whole workflow in <em>one click</em></h1>
+          <p class="lede">
+            It captures every step of a GoHighLevel workflow in a single image,
+            including the ones scrolled off screen.
+          </p>
+          <div class="cta-row">
+            <a class="btn" href="STORE_URL_PENDING">Add to Chrome. It's free</a>
+            <a class="btn ghost" href="#how">See how it works</a>
+          </div>
+          <p class="fineprint">
+            No account <span>/</span> No tracking <span>/</span> Open source
+          </p>
+        </div>
+
+        <!-- Signature: the workflow runs past the frame, because that is the point. -->
+        <div class="capture" aria-hidden="true">
+          <div class="screen"></div>
+          <div class="cut"></div>
+          <span class="tag-captured">captured anyway</span>
+          <div class="ribbon-wrap">
+          <div class="ribbon">
+            <div class="node" style="animation-delay: 0.02s">
+              <span class="dot plum"></span>
+              <span class="bars"><span class="bar"></span><span class="bar short"></span></span>
+            </div>
+            <div class="node" style="animation-delay: 0.08s">
+              <span class="dot"></span>
+              <span class="bars"><span class="bar short"></span></span>
+            </div>
+            <div class="node" style="animation-delay: 0.14s">
+              <span class="dot blush"></span>
+              <span class="bars"><span class="bar"></span><span class="bar short"></span></span>
+            </div>
+            <div class="branch">
+              <div class="node" style="animation-delay: 0.2s">
+                <span class="dot"></span>
+                <span class="bars"><span class="bar short"></span></span>
+              </div>
+              <div class="node" style="animation-delay: 0.24s">
+                <span class="dot plum"></span>
+                <span class="bars"><span class="bar short"></span></span>
+              </div>
+            </div>
+            <div class="node" style="animation-delay: 0.3s">
+              <span class="dot blush"></span>
+              <span class="bars"><span class="bar"></span><span class="bar short"></span></span>
+            </div>
+            <div class="node" style="animation-delay: 0.36s">
+              <span class="dot"></span>
+              <span class="bars"><span class="bar short"></span></span>
+            </div>
+            <div class="node" style="animation-delay: 0.42s">
+              <span class="dot plum"></span>
+              <span class="bars"><span class="bar"></span></span>
+            </div>
+          </div>
+          </div>
+        </div>
+      </header>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">The part you already know</p>
+          <h2>Print screen, paste, scroll, <em>repeat</em></h2>
+          <p>
+            Documenting a workflow means taking a picture of it in pieces, then
+            lining the pieces up in a doc so a client can follow it. The
+            full-page screenshot tools don't help. The builder never scrolls, so
+            they only grab the part you can see.
+          </p>
+          <p>
+            So most workflows never get documented. Then a client asks what
+            happens after someone books, and you're back in the builder taking
+            pictures of it again.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" style="padding-top: 0">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">How it works</p>
+          <h2>One image. Every step.</h2>
+          <p>
+            It resets the canvas to 100% before it starts, so it doesn't matter
+            how zoomed out you were. The minimap and zoom buttons are left out,
+            so the image is clean enough to drop straight into an SOP.
+          </p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <span class="num">Step one</span>
+            <h3>Open a workflow</h3>
+            <p>Any workflow in the GoHighLevel builder, including whitelabel accounts.</p>
+          </div>
+          <div class="step">
+            <span class="num">Step two</span>
+            <h3>Click Capture</h3>
+            <p>The extension pans across the workflow and takes the shots for you.</p>
+          </div>
+          <div class="step">
+            <span class="num">Step three</span>
+            <h3>Get one image</h3>
+            <p>PNG or JPEG, named after the workflow, straight to your Downloads.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top: 0">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">What people use it for</p>
+          <h2>Work that has to be <em>visible</em></h2>
+        </div>
+        <ul class="uses">
+          <li>Client SOPs that show what you actually built</li>
+          <li>Handing a workflow to a VA or a new hire</li>
+          <li>Before and after shots when you rebuild something</li>
+          <li>Proposals and audits where the work needs to be seen</li>
+          <li>Your own notes, so you don't reopen the builder to remember</li>
+          <li>Sharing a build with a client who will never log in</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="dark">
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">Privacy</p>
+          <h2>It doesn't send anything <em>anywhere</em></h2>
+          <p>
+            The extension makes no network requests at all. Nothing is collected,
+            nothing is transmitted, nothing is sold. There's no account and no
+            analytics. The capture happens in your browser and the image goes to
+            your Downloads.
+          </p>
+        </div>
+        <div class="facts">
+          <div class="fact">
+            <strong>Two permissions</strong>
+            <span>One to screenshot the tab when you press Capture. One to remember your two settings.</span>
+          </div>
+          <div class="fact">
+            <strong>One page</strong>
+            <span>It only runs on the workflow builder. Every other tab is untouched.</span>
+          </div>
+          <div class="fact">
+            <strong>All of the code</strong>
+            <span
+              >Public, so you can read it before you install it.
+              <a href="https://github.com/Beeyach/workflow-screenshotter" style="color: var(--mauve)"
+                >See the source</a
+              >.</span
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="sec-head">
+          <p class="eyebrow">Questions</p>
+          <h2>Before you install it</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Is it really free?</summary>
+            <p>Yes. No paid tier, no trial, no upsell.</p>
+          </details>
+          <details>
+            <summary>Does it work on my whitelabel domain?</summary>
+            <p>Yes. The builder is the same underneath, so custom domains work.</p>
+          </details>
+          <details>
+            <summary>Does it work with Zapier, Make, or n8n?</summary>
+            <p>No. GoHighLevel workflows only.</p>
+          </details>
+          <details>
+            <summary>What about very long workflows?</summary>
+            <p>
+              Those are the ones it's for. Long workflows take longer because it
+              captures in sections, and you'll see the progress while it runs.
+            </p>
+          </details>
+          <details>
+            <summary>Can I get a bigger image for printing?</summary>
+            <p>
+              Yes. There's a size setting in the popup. Normal matches what you
+              see on screen. 2x and 3x are there if you need to zoom in or print.
+            </p>
+          </details>
+          <details>
+            <summary>Who made this?</summary>
+            <p>
+              We did. We build booking and follow-up systems in GoHighLevel, and
+              we got tired of screenshotting workflows by hand.
+            </p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="close-cta" style="padding-top: 0">
+      <div class="wrap">
+        <h2>Add it and go screenshot something</h2>
+        <p style="margin-block: 18px 28px">
+          It's free and takes about ten seconds to install.
+        </p>
+        <a class="btn" href="STORE_URL_PENDING">Add to Chrome</a>
+        <p class="fineprint" style="margin-top: 20px">
+          Found a bug, or GoHighLevel changed something?
+          <a href="https://github.com/Beeyach/workflow-screenshotter/issues">Tell us here</a>.
+        </p>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <div class="agency">
+        <p>
+          We're Bloomwired. We build the booking and follow-up systems these
+          workflows run on, for small service businesses.
+        </p>
+        <a href="https://bloomwired.io">See what we do &rarr;</a>
+      </div>
+      <footer>
+        <span>&copy; 2026 Bloomwired</span>
+        <span>
+          Not affiliated with, endorsed by, or sponsored by HighLevel, Inc.
+          HighLevel is a trademark of HighLevel, Inc.
+        </span>
+      </footer>
+    </div>
+  </body>
+</html>
