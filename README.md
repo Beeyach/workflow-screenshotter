@@ -1,39 +1,69 @@
-# GHL Workflow Screenshotter
+# Bloomwired Workflow Screenshotter
 
-Chrome extension that captures an entire GoHighLevel workflow — the whole pan/zoom canvas, not just the visible screen — into a single high-resolution PNG.
+A Chrome extension that captures an entire automation workflow — the whole
+pan/zoom canvas, not just the visible screen — as a single image.
+
+Free, no account, no tracking. Compatible with the HighLevel™ workflow builder,
+including whitelabel domains. Not affiliated with or endorsed by HighLevel, Inc.
 
 ## Why
 
-GHL's workflow builder lives in a pan/zoom canvas inside a cross-origin iframe, so normal full-page screenshot tools only ever capture the visible viewport. This extension pans the canvas tile-by-tile, screenshots each tile, and stitches them into one image.
+The workflow builder draws your automation on a canvas inside a cross-origin
+iframe. The page itself never scrolls, so ordinary full-page screenshot tools
+capture only the viewport. This extension resets the canvas to 100%, pans it
+tile by tile, screenshots each tile, and stitches the result into one image.
 
 ## Install
 
-1. Open `chrome://extensions`, enable **Developer mode**.
+1. Open `chrome://extensions` and enable **Developer mode**.
 2. **Load unpacked** → select this folder.
-3. Accept the `leadconnectorhq.com` / `gohighlevel.com` permissions.
 
 ## Use
 
-Open any workflow in the GHL automation builder and either:
+Open a workflow, click the toolbar icon, then **Capture workflow**. The image
+lands in Downloads as `<workflow name>_<YYYY-MM-DD>.png`.
 
-- click the floating **📸 button** (bottom-right of the builder), or
-- click the extension's toolbar icon.
+- **Image size** — Normal matches what you see on screen. 2×/3× are for zooming
+  in or printing, and cost roughly 4×/9× the capture time.
+- **File type** — PNG (lossless) or JPEG (smaller).
+- **Cancel** — the button on the progress pill, or Esc.
 
-A progress overlay pans across the workflow (Esc cancels). The finished PNG lands in Downloads as `<workflow name>_<YYYY-MM-DD>.png`. Text is captured at ~2× density, so it stays crisp even if you work zoomed out.
+The minimap and zoom controls are always excluded, and off-screen steps are
+always included.
 
-On a **whitelabel domain**, use the toolbar icon (the floating button can't take screenshots there without a host permission for that domain).
+## Privacy
+
+No data is collected, and the extension makes no network requests. Capture runs
+entirely in the browser; the image goes straight to Downloads. Permissions are
+`activeTab` (screenshot the tab when you press Capture) and `storage` (remember
+your two preferences). It runs on the workflow builder's iframe only.
 
 ## Troubleshooting
 
-- **Alt-click** the 📸 button to also download a `ghl-shot-debug.txt` with the detected canvas, bounds, and overlay elements.
-- If GHL redesigns the builder, the selectors live in the `CONFIG` object at the top of [src/content.js](src/content.js).
+- **"Reload the workflow page, then try again"** — the content script wasn't
+  loaded yet (usually right after installing or reloading the extension).
+- **Alt-click "Capture workflow"** to also save `ghl-shot-debug.txt`, which
+  reports the detected canvas, node count, measured bounds, and capture scale.
+- If the builder's markup ever changes, the selectors live in the `CONFIG`
+  object at the top of [src/content.js](src/content.js).
 
 ## Development
 
-No dependencies, no build step. Unit tests for the geometry/naming math:
+No dependencies and no build step.
 
 ```
-node --test
+node --test                              # unit tests for the geometry/naming math
+powershell -File scripts/make-icons.ps1  # regenerate icons from brand colors
+powershell -File scripts/package.ps1     # build the Web Store zip into dist/
 ```
 
-Extension code changes require a reload on `chrome://extensions` to take effect.
+Code changes need an extension reload on `chrome://extensions`.
+
+- [src/content.js](src/content.js) — capture orchestrator (canvas discovery, measuring, tiling, stitching)
+- [src/geometry.js](src/geometry.js) — pure rect/tile math (unit-tested)
+- [src/brand.js](src/brand.js) — brand colors and site URL
+- [docs/store-listing.md](docs/store-listing.md) — Chrome Web Store submission notes
+
+## License
+
+MIT — see [LICENSE](LICENSE).

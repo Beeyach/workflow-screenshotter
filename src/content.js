@@ -1,5 +1,5 @@
-// Defines the capture entry point; started by src/starter.js (toolbar click)
-// or the floating button from src/button.js.
+// Defines the capture entry point, started by the popup's Capture button (see
+// the message listener at the bottom of this file).
 window.__ghlShotStart = async function main(opts) {
   if (window.__ghlShotRunning) return;
   window.__ghlShotRunning = true;
@@ -240,19 +240,7 @@ window.__ghlShotStart = async function main(opts) {
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type: "GHLSHOT_CAPTURE" }, (res) => {
         if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
-        if (!res || !res.ok) {
-          const msg = res ? res.error : "no response";
-          // Chrome only grants screenshot access when the user invokes the
-          // extension from the toolbar; an in-page button doesn't count.
-          if (/all_urls|activeTab|permission/i.test(msg)) {
-            return reject(
-              new Error(
-                "click the toolbar icon and press Capture (or turn on one-click capture there)."
-              )
-            );
-          }
-          return reject(new Error(msg));
-        }
+        if (!res || !res.ok) return reject(new Error(res ? res.error : "no response"));
         resolve(res.dataUrl);
       });
     });
@@ -261,9 +249,7 @@ window.__ghlShotStart = async function main(opts) {
   async function captureTileWithRetry() {
     try {
       return await captureTile();
-    } catch (err) {
-      // A missing permission will never fix itself; only retry throttle errors.
-      if (/toolbar icon/.test(err.message)) throw err;
+    } catch (_err) {
       await sleep(700); // one retry after backing off past the throttle window
       return await captureTile();
     }
@@ -344,14 +330,7 @@ window.__ghlShotStart = async function main(opts) {
 
   const container = findPanContainer();
   if (!container) {
-    // The builder lives in a cross-origin iframe on *.leadconnectorhq.com; this
-    // script runs in every frame. Only one frame should own the "not found" UX:
-    // the automation iframe itself, or a top frame with no embedded GHL app.
-    const isAutomationFrame = location.hostname.includes("automation-workflows");
-    const hasEmbeddedApp = !!document.querySelector('iframe[src*="leadconnectorhq"]');
-    if (isAutomationFrame || (window === window.top && !hasEmbeddedApp)) {
-      overlay.toast("GHL Screenshotter: no workflow canvas found — open a workflow first.");
-    }
+    overlay.toast("Workflow Screenshotter: no workflow canvas found — open a workflow first.");
     window.__ghlShotRunning = false;
     return;
   }
@@ -406,8 +385,8 @@ window.__ghlShotStart = async function main(opts) {
   });
 
   try {
-    // Our own floating button and the builder's chrome must never appear.
-    const hideTargets = ["#ghl-shot-button"].concat(CONFIG.hideSelectors);
+    // The builder's own chrome must never appear in the capture.
+    const hideTargets = CONFIG.hideSelectors;
     for (const sel of hideTargets) {
       for (const el of document.querySelectorAll(sel)) {
         hidden.push({ el, visibility: el.style.visibility });
@@ -589,9 +568,18 @@ window.__ghlShotStart = async function main(opts) {
       debugInfo.error = String(err && err.message);
       dumpDebug();
     }
-    overlay.toast(`GHL Screenshotter: ${err.message}`);
+    overlay.toast(`Workflow Screenshotter: ${err.message}`);
   } finally {
-    // Belt and braces: never leave the button dead if restore() was skipped.
+    // Belt and braces: never leave capture wedged if restore() was skipped.
     window.__ghlShotRunning = false;
   }
 };
+
+// The popup's Capture button starts a run. This script is only injected into
+// the builder's iframe, so the message lands where the canvas actually lives.
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg && msg.type === "GHLSHOT_START") {
+    window.__ghlShotStart({ debug: !!msg.debug });
+    sendResponse({ ok: true });
+  }
+});
