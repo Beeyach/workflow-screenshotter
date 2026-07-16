@@ -440,11 +440,10 @@ window.__ghlShotStart = async function main(opts) {
       height: rawClip.height - 2 * CONFIG.viewInset,
     };
     if (runDebug) {
+      // Collected here, written once at the end — the catch below dumps it too
+      // if the capture fails, so the measurements survive either way.
       debugInfo = collectDebugInfo(container, rawClip);
       debugInfo.measure = measureDiagnostics(container);
-      // Dump now, not at the end: if the capture itself fails, the measurement
-      // data is exactly what's needed to diagnose it.
-      dumpDebug();
     }
 
     // Calibration probe: one throwaway capture to measure the true ratio of
