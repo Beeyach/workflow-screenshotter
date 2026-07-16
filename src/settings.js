@@ -11,8 +11,10 @@
   // zoom controls, and fitting the view before measuring, are always-on
   // requirements for a clean, complete capture — not choices.
   const DEFAULTS = {
-    // Physical px per workflow CSS px. 2 = sharp, 3 = sharpest (slower).
-    targetPixelRatio: 2,
+    // Physical px per workflow CSS px. 1 keeps the image at the workflow's
+    // natural size (and the tile count low); 2-3 are for zooming in or print,
+    // at ~4x/9x the tiles and file size.
+    targetPixelRatio: 1,
     format: "png", // "png" | "jpeg"
     jpegQuality: 0.92,
   };

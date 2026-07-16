@@ -39,6 +39,7 @@ async function init() {
     else el.value = String(values[key]);
     el.addEventListener("change", onChange);
   }
+  updateSizeHint();
   await initOneClick();
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -48,11 +49,23 @@ async function init() {
   }
 }
 
+const SIZE_HINTS = {
+  1: "Normal — same size as on screen",
+  2: "Double size — for zooming in or print",
+  3: "Triple size — huge file, slow capture",
+};
+
+function updateSizeHint() {
+  const value = document.getElementById("targetPixelRatio").value;
+  document.getElementById("sizeHint").textContent = SIZE_HINTS[value];
+}
+
 async function onChange(e) {
   const el = e.target;
   const raw = el.type === "checkbox" ? el.checked : el.value;
   const value = el.id === "targetPixelRatio" ? Number(raw) : raw;
   await S.save({ [el.id]: value });
+  if (el.id === "targetPixelRatio") updateSizeHint();
   statusEl.textContent = "Saved.";
   setTimeout(() => (statusEl.textContent = ""), 1200);
 }
