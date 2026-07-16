@@ -325,7 +325,15 @@ window.__ghlShotStart = async function main(opts) {
       `[${OVERRIDE_ATTR}] {` +
       `transform: ${transformCss} !important;` +
       `transform-origin: 0 0 !important;` +
-      `transition: none !important;}`;
+      `transition: none !important;` +
+      // Vue Flow sets will-change/backface-visibility on the pan layer for
+      // smooth panning, which makes Chrome cache the layer's bitmap and merely
+      // GPU-scale it — our scale-up would then be a blurry upscale instead of a
+      // fresh render. Releasing the hint forces text to re-rasterize crisply at
+      // the capture scale.
+      `will-change: auto !important;` +
+      `backface-visibility: visible !important;` +
+      `contain: none !important;}`;
   }
 
   function clearCanvasTransform(el) {
