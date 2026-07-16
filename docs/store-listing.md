@@ -47,7 +47,8 @@ PRIVACY
 • Works only on the automation workflow builder — no other site is touched.
 
 OPEN SOURCE
-Read every line before you install it: <REPO URL>
+Read every line before you install it:
+https://github.com/Beeyach/workflow-screenshotter
 
 Free, with no paid tier.
 
@@ -56,8 +57,7 @@ with the HighLevel™ workflow builder, including whitelabel domains. HighLevel
 is a trademark of HighLevel, Inc.
 ```
 
-Replace `<REPO URL>` before submitting, or delete the OPEN SOURCE section — see
-"Can I say it's open source?" below.
+The repository is public and MIT-licensed, so the OPEN SOURCE claim is accurate.
 
 ## Category / language
 
@@ -129,10 +129,10 @@ in the workflow you screenshot; use a demo sub-account.
 
 ## Can I say it's open source?
 
-Only if the source is actually published. The repository has an MIT `LICENSE`,
-so once you push it to a public GitHub repo and link it in the listing, the claim
-is accurate. Until then, delete the OPEN SOURCE paragraph — an unverifiable
-claim is worse than no claim.
+Yes — the source is public and MIT-licensed at
+https://github.com/Beeyach/workflow-screenshotter. Keep the listing's repo link
+pointing there; if the repo is ever made private, drop the OPEN SOURCE paragraph
+from the description, because an unverifiable claim is worse than no claim.
 
 ## Pre-submit checklist
 
