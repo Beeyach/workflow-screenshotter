@@ -398,7 +398,11 @@ window.__ghlShotStart = async function main(opts) {
 
   overlay.show();
   overlay.onCancel(() => {
+    // The tile loop checks this at its next boundary, so say so — otherwise
+    // Cancel looks broken for the second or two until the current tile lands.
+    if (state.cancelled) return;
     state.cancelled = true;
+    overlay.setProgress("Cancelling…");
   });
 
   try {
@@ -531,7 +535,7 @@ window.__ghlShotStart = async function main(opts) {
     for (let i = 0; i < tiles.length; i++) {
       if (state.cancelled) throw new Error("cancelled.");
       const tile = tiles[i];
-      overlay.setProgress(`Capturing tile ${i + 1} of ${tiles.length}… (Esc to cancel)`);
+      overlay.setProgress(`Capturing tile ${i + 1} of ${tiles.length}…`);
 
       const t = G.computeTranslate(tile, origin, viewRect, captureScale);
       setCanvasTransform(container, `translate(${t.tx}px, ${t.ty}px) scale(${captureScale})`);

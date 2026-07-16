@@ -16,29 +16,63 @@ window.GhlShotOverlay = (function () {
         "position:fixed",
         "inset:0",
         "z-index:2147483647",
-        "background:rgba(0,0,0,0.25)",
+        "background:rgba(20,20,28,0.28)",
         "display:flex",
         "align-items:flex-start",
         "justify-content:center",
         "cursor:progress",
       ].join(";")
     );
-    progressEl = document.createElement("div");
-    progressEl.setAttribute(
+
+    const pill = document.createElement("div");
+    pill.setAttribute(
       "style",
       [
         "margin-top:80px",
-        "padding:12px 22px",
+        "padding:10px 10px 10px 22px",
         "border-radius:999px",
-        "background:linear-gradient(135deg,#312e81,#111)",
-        "border:1px solid rgba(160,120,255,0.55)",
+        "background:linear-gradient(135deg,#14141c,#5e3e58)",
+        "border:1px solid rgba(180,142,173,0.5)",
         "color:#fff",
-        "font:14px/1.4 system-ui,sans-serif",
-        "box-shadow:0 6px 24px rgba(0,0,0,0.45)",
+        "font:14px/1.4 system-ui,-apple-system,sans-serif",
+        "box-shadow:0 6px 24px rgba(20,20,28,0.45)",
+        "display:flex",
+        "align-items:center",
+        "gap:14px",
       ].join(";")
     );
-    progressEl.textContent = "Preparing capture… (Esc to cancel)";
-    overlayEl.appendChild(progressEl);
+
+    progressEl = document.createElement("span");
+    progressEl.textContent = "Preparing capture…";
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "Cancel";
+    cancelBtn.setAttribute(
+      "style",
+      [
+        "padding:5px 14px",
+        "border-radius:999px",
+        "border:1px solid rgba(255,255,255,0.35)",
+        "background:transparent",
+        "color:#fff",
+        "font:13px/1 system-ui,-apple-system,sans-serif",
+        "cursor:pointer",
+      ].join(";")
+    );
+    cancelBtn.addEventListener("mouseenter", () => {
+      cancelBtn.style.background = "rgba(255,255,255,0.16)";
+    });
+    cancelBtn.addEventListener("mouseleave", () => {
+      cancelBtn.style.background = "transparent";
+    });
+    cancelBtn.addEventListener("click", () => {
+      if (cancelFn) cancelFn();
+    });
+    cancelBtn.title = "Cancel capture (Esc)";
+
+    pill.appendChild(progressEl);
+    pill.appendChild(cancelBtn);
+    overlayEl.appendChild(pill);
     document.documentElement.appendChild(overlayEl);
     document.addEventListener("keydown", onKeyDown, true);
   }
@@ -78,11 +112,12 @@ window.GhlShotOverlay = (function () {
         "transform:translateX(-50%)",
         "z-index:2147483647",
         "padding:10px 18px",
-        "border-radius:8px",
-        "background:#111",
+        "border-radius:999px",
+        "background:linear-gradient(135deg,#14141c,#5e3e58)",
+        "border:1px solid rgba(180,142,173,0.5)",
         "color:#fff",
-        "font:14px/1.4 system-ui,sans-serif",
-        "box-shadow:0 4px 16px rgba(0,0,0,0.4)",
+        "font:14px/1.4 system-ui,-apple-system,sans-serif",
+        "box-shadow:0 4px 16px rgba(20,20,28,0.4)",
       ].join(";")
     );
     el.textContent = message;
