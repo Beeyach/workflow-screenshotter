@@ -21,6 +21,6 @@
     muted: "#3a3545",
     gradient: "linear-gradient(135deg,#14141c,#5e3e58)",
     website: "https://bloomwired.io",
-    name: "Bloomwired Workflow Screenshotter",
+    name: "Workflow Screenshotter",
   };
 });

@@ -1,4 +1,4 @@
-# Bloomwired Workflow Screenshotter
+# Workflow Screenshotter
 
 A Chrome extension that captures an entire automation workflow — the whole
 pan/zoom canvas, not just the visible screen — as a single image.

@@ -8,7 +8,7 @@ $root = Split-Path $PSScriptRoot -Parent
 $manifest = Get-Content (Join-Path $root "manifest.json") -Raw | ConvertFrom-Json
 $version = $manifest.version
 $dist = Join-Path $root "dist"
-$zipPath = Join-Path $dist "bloomwired-workflow-screenshotter-$version.zip"
+$zipPath = Join-Path $dist "workflow-screenshotter-$version.zip"
 
 if (-not (Test-Path $dist)) { New-Item -ItemType Directory -Path $dist | Out-Null }
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }

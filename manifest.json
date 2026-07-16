@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Bloomwired Workflow Screenshotter",
+  "name": "Workflow Screenshotter",
   "version": "1.0.0",
   "description": "Capture an entire automation workflow as one image — including the steps scrolled off screen. Works with HighLevel.",
   "icons": {

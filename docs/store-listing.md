@@ -7,13 +7,14 @@ policies linked at the bottom.
 ## Item name
 
 ```
-Bloomwired Workflow Screenshotter
+Workflow Screenshotter
 ```
 
 Deliberately does **not** contain "HighLevel" or "GoHighLevel". The trademark
 belongs to HighLevel, Inc.; putting it in the name risks reading as an official
-product and is the pattern that gets extensions removed. Our own brand is the
-distinctive part of the name.
+product and is the pattern that gets extensions removed. Bloomwired appears as
+the publisher (shown by the store above the listing) and in the description, so
+the name itself stays plain and searchable.
 
 ## Short description (132 char max)
 
@@ -32,7 +33,7 @@ This extension captures the whole thing in one click.
 
 HOW IT WORKS
 1. Open a workflow in your automation builder.
-2. Click the Bloomwired icon, then "Capture workflow".
+2. Click the Workflow Screenshotter icon, then "Capture workflow".
 3. A single image lands in your Downloads, named after the workflow.
 
 WHAT YOU GET
@@ -138,7 +139,7 @@ from the description, because an unverifiable claim is worse than no claim.
 
 - [ ] `node --test` passes
 - [ ] Version bumped in `manifest.json`
-- [ ] `scripts/package.ps1` run; upload `dist/bloomwired-workflow-screenshotter-<version>.zip`
+- [ ] `scripts/package.ps1` run; upload `dist/workflow-screenshotter-<version>.zip`
 - [ ] Repo pushed public (or OPEN SOURCE paragraph removed)
 - [ ] Screenshots contain no client data and no HighLevel logo
 - [ ] Listing visibility chosen (Unlisted to start, Public when proven)
