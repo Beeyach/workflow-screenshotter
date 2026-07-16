@@ -112,17 +112,27 @@ stitches them into one image, then restores the canvas.
 
 ## Privacy practices tab
 
-- **What user data do you collect?** Nothing. Leave every category unchecked.
-- **Privacy policy URL:** not required — Chrome's user-data FAQ says extensions
-  that collect no user data "have no special or new obligations". Optional but
-  reassuring if you want one on bloomwired.io.
+- **Remote code:** answer **No**. The form defaults to "Yes" — everything ships
+  in the package, nothing is fetched or eval'd, so leaving the default would be
+  an inaccurate declaration.
+- **What user data do you collect?** Tick **Website content**, and nothing else.
+  This one is counter-intuitive: the extension sends nothing anywhere, but
+  Chrome's user data FAQ says disclosure is required "even when data is
+  processed or stored locally on a user's device and is not transmitted", and it
+  names our exact case as handling — "clipping or scraping content from a
+  website that the user visits, such as taking screenshots". A screenshot of the
+  workflow is website content. Under-disclosing it is a rejection risk.
+- **Privacy policy URL: required.** Because "Website content" is ticked, the
+  store asks for a policy link. `docs/privacy.html` in this repo is the policy;
+  host it and paste its URL here.
 - **Certifications** (all three are true here):
   - Not being sold to third parties, outside of the approved use cases ✓
   - Not being used or transferred for purposes unrelated to the item's single purpose ✓
   - Not being used or transferred to determine creditworthiness or for lending purposes ✓
 
-The extension makes **no network requests at all**, which is the easiest version
-of this form to defend.
+The extension makes **no network requests at all**, which makes the
+certifications easy to defend — but it does not exempt the extension from
+disclosing what it handles locally.
 
 ## Trader status
 
