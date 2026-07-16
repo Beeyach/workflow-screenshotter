@@ -33,6 +33,23 @@
     return { x: rect.x - origin.x, y: rect.y - origin.y, width: rect.width, height: rect.height };
   }
 
+  // Pull the x/y offset out of a CSS transform. Vue Flow positions each node
+  // with `translate(x, y)` in canvas coordinates, so this reads a node's true
+  // position regardless of the canvas's current zoom.
+  function parseTranslate(cssTransform) {
+    if (!cssTransform) return null;
+    const t = cssTransform.match(
+      /translate(?:3d)?\(\s*(-?[\d.]+)px\s*,\s*(-?[\d.]+)px/
+    );
+    if (t) return { x: parseFloat(t[1]), y: parseFloat(t[2]) };
+    const m = cssTransform.match(/matrix\(([^)]+)\)/);
+    if (m) {
+      const parts = m[1].split(",").map((v) => parseFloat(v.trim()));
+      if (parts.length >= 6) return { x: parts[4], y: parts[5] };
+    }
+    return null;
+  }
+
   function computeTileGrid(bounds, tileWidth, tileHeight) {
     const cols = Math.max(1, Math.ceil(bounds.width / tileWidth));
     const rows = Math.max(1, Math.ceil(bounds.height / tileHeight));
@@ -100,6 +117,7 @@
     computeUnionBounds,
     intersectRects,
     relativeBounds,
+    parseTranslate,
     computeTileGrid,
     computeTranslate,
     computeOutputScale,

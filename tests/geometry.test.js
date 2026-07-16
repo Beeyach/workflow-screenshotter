@@ -82,6 +82,22 @@ test("computeOutputScale shrinks bounds oversized by area", () => {
   assert.ok(Math.abs(s - Math.sqrt(BIG_AREA / (24000 * 24000))) < 1e-9);
 });
 
+test("parseTranslate reads px translate", () => {
+  assert.deepEqual(G.parseTranslate("translate(0px, 0px)"), { x: 0, y: 0 });
+  assert.deepEqual(G.parseTranslate("translate(-260px, 3200px)"), { x: -260, y: 3200 });
+  assert.deepEqual(G.parseTranslate("translate(-127.5px, -300px)"), { x: -127.5, y: -300 });
+});
+
+test("parseTranslate reads translate3d and matrix", () => {
+  assert.deepEqual(G.parseTranslate("translate3d(10px, 20px, 0px)"), { x: 10, y: 20 });
+  assert.deepEqual(G.parseTranslate("matrix(1, 0, 0, 1, 5, 6)"), { x: 5, y: 6 });
+});
+
+test("parseTranslate returns null when absent", () => {
+  assert.equal(G.parseTranslate("none"), null);
+  assert.equal(G.parseTranslate(""), null);
+});
+
 test("computeEffectiveScale keeps target density for normal workflows", () => {
   assert.equal(G.computeEffectiveScale({ width: 1500, height: 900 }, 2, 32000, BIG_AREA), 2);
 });

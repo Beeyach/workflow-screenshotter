@@ -13,9 +13,11 @@ window.__ghlShotStart = async function main(opts) {
   // All GHL-DOM-dependent knobs live here (see design spec: selectors are
   // isolated for easy patching when GHL changes its builder).
   const CONFIG = {
-    // GHL's builder is Vue Flow: the pan/zoom layer is .vue-flow__viewport.
-    // The generic heuristic below is the fallback if GHL restructures.
-    candidateSelectors: [".vue-flow__viewport"],
+    // GHL's builder is Vue Flow. The zoom/pan transform lives on the
+    // TRANSFORMATION PANE, not on its .vue-flow__viewport parent — overriding
+    // the parent leaves the canvas at its current zoom. The generic heuristic
+    // below is the fallback if GHL restructures.
+    candidateSelectors: [".vue-flow__transformationpane", ".vue-flow__viewport"],
     // Floating UI inside the clip area to hide during capture. All of GHL's
     // builder chrome (minimap, zoom controls, +Add, shortcuts) are panels.
     hideSelectors: [".vue-flow__panel"],
@@ -114,17 +116,19 @@ window.__ghlShotStart = async function main(opts) {
     return { x: r.left, y: r.top, width: r.width, height: r.height };
   }
 
-  // Preferred: measure the workflow from Vue Flow's own node elements. The
-  // generic descendant scan below picks up viewport-sized background/edge
-  // layers, which pin the bounds to one screenful — see measureDiagnostics.
+  // Measure the workflow in CANVAS coordinates, straight from each node's own
+  // `translate(x, y)` and its unscaled offsetWidth/Height. Screen rects would
+  // be multiplied by whatever zoom the builder happens to be at; these values
+  // are zoom-independent, so the bounds are always the workflow's true size.
   function measureNodeBounds(container) {
-    const nodes = container.querySelectorAll(CONFIG.nodeSelector);
-    if (nodes.length < 1) return null;
     const rects = [];
-    for (const el of nodes) {
-      const r = rectOf(el);
-      if (r.width === 0 || r.height === 0) continue;
-      rects.push(r);
+    for (const el of container.querySelectorAll(CONFIG.nodeSelector)) {
+      const pos = G.parseTranslate(el.style.transform || getComputedStyle(el).transform);
+      if (!pos) continue;
+      const width = el.offsetWidth;
+      const height = el.offsetHeight;
+      if (!width || !height) continue;
+      rects.push({ x: pos.x, y: pos.y, width, height });
     }
     const union = G.computeUnionBounds(rects);
     if (!union) return null;
@@ -404,11 +408,29 @@ window.__ghlShotStart = async function main(opts) {
     setCanvasTransform(container, "none");
     await nextFrames(2);
 
+    // Prove the zoom override actually landed: a node's on-screen width must
+    // now equal its unscaled width. This exact bug shipped once — the override
+    // was applied to the viewport while the zoom lived on the transformation
+    // pane, so everything was measured at the builder's zoom and upscaled.
+    const probeNode = container.querySelector(CONFIG.nodeSelector);
+    if (probeNode && probeNode.offsetWidth) {
+      const shownScale = probeNode.getBoundingClientRect().width / probeNode.offsetWidth;
+      if (Math.abs(shownScale - 1) > 0.02) {
+        throw new Error(
+          `could not reset the canvas zoom (stuck at ${Math.round(shownScale * 100)}%) — ` +
+            "the builder's layout may have changed."
+        );
+      }
+    }
+
     const originRect = container.getBoundingClientRect();
     const origin = { x: originRect.left, y: originRect.top };
-    const screenBounds = measureNodeBounds(container) || measureScreenBounds(container);
-    if (!screenBounds) throw new Error("workflow appears to be empty.");
-    const bounds = G.relativeBounds(screenBounds, origin);
+    // Node bounds are already in canvas coordinates; the fallback scan returns
+    // screen rects, which need the container origin subtracted.
+    const nodeBounds = measureNodeBounds(container);
+    const screenFallback = nodeBounds ? null : measureScreenBounds(container);
+    if (!nodeBounds && !screenFallback) throw new Error("workflow appears to be empty.");
+    const bounds = nodeBounds || G.relativeBounds(screenFallback, origin);
 
     const rawClip = findClipRect(container);
     const viewRect = {
