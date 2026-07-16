@@ -63,6 +63,7 @@ Code changes need an extension reload on `chrome://extensions`.
 - [src/content.js](src/content.js) — capture orchestrator (canvas discovery, measuring, tiling, stitching)
 - [src/geometry.js](src/geometry.js) — pure rect/tile math (unit-tested)
 - [src/brand.js](src/brand.js) — brand colors and site URL
+- [site/](site/) — the landing page and privacy policy (deployed to Cloudflare Pages)
 - [docs/store-listing.md](docs/store-listing.md) — Chrome Web Store submission notes
 
 ## License

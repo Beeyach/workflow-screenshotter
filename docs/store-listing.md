@@ -123,7 +123,7 @@ stitches them into one image, then restores the canvas.
   website that the user visits, such as taking screenshots". A screenshot of the
   workflow is website content. Under-disclosing it is a rejection risk.
 - **Privacy policy URL: required.** Because "Website content" is ticked, the
-  store asks for a policy link. `docs/privacy.html` in this repo is the policy;
+  store asks for a policy link. `site/privacy-policy.html` in this repo is the policy;
   host it and paste its URL here.
 - **Certifications** (all three are true here):
   - Not being sold to third parties, outside of the approved use cases ✓
