@@ -156,12 +156,30 @@ window.__ghlShotStart = async function main(opts) {
         w: Math.round(r.width),
         h: Math.round(r.height),
       }));
-    const nodes = container.querySelectorAll(CONFIG.nodeSelector);
+    const nodes = [...container.querySelectorAll(CONFIG.nodeSelector)];
+    let zeroSized = 0;
+    const details = nodes.map((el) => {
+      const r = rectOf(el);
+      if (r.width === 0 || r.height === 0) zeroSized++;
+      const st = getComputedStyle(el);
+      return {
+        inlineTransform: (el.style.transform || "").slice(0, 48),
+        offset: { w: el.offsetWidth, h: el.offsetHeight },
+        rect: { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) },
+        display: st.display,
+        visibility: st.visibility,
+        contentVisibility: st.contentVisibility,
+      };
+    });
     return {
       containerCls: String(container.className).slice(0, 80),
       descendantCount: all.length,
       nodeSelector: CONFIG.nodeSelector,
       nodeCount: nodes.length,
+      zeroSizedNodes: zeroSized,
+      // Does the builder's own minimap know about more nodes than the DOM has?
+      minimapNodeCount: document.querySelectorAll(".vue-flow__minimap-node").length,
+      nodeDetails: details.slice(0, 40),
       biggestDescendants: biggest,
       nodeBounds: measureNodeBounds(container),
       heuristicBounds: measureScreenBounds(container),
@@ -361,6 +379,11 @@ window.__ghlShotStart = async function main(opts) {
     window.__ghlShotRunning = false;
   }
 
+  let debugInfo = null;
+  function dumpDebug() {
+    if (debugInfo) downloadText("ghl-shot-debug.txt", JSON.stringify(debugInfo, null, 1));
+  }
+
   overlay.show();
   overlay.onCancel(() => {
     state.cancelled = true;
@@ -383,7 +406,6 @@ window.__ghlShotStart = async function main(opts) {
 
     const originRect = container.getBoundingClientRect();
     const origin = { x: originRect.left, y: originRect.top };
-    const diagnostics = runDebug ? measureDiagnostics(container) : null;
     const screenBounds = measureNodeBounds(container) || measureScreenBounds(container);
     if (!screenBounds) throw new Error("workflow appears to be empty.");
     const bounds = G.relativeBounds(screenBounds, origin);
@@ -395,7 +417,13 @@ window.__ghlShotStart = async function main(opts) {
       width: rawClip.width - 2 * CONFIG.viewInset,
       height: rawClip.height - 2 * CONFIG.viewInset,
     };
-    const debugInfo = runDebug ? collectDebugInfo(container, rawClip) : null;
+    if (runDebug) {
+      debugInfo = collectDebugInfo(container, rawClip);
+      debugInfo.measure = measureDiagnostics(container);
+      // Dump now, not at the end: if the capture itself fails, the measurement
+      // data is exactly what's needed to diagnose it.
+      dumpDebug();
+    }
 
     // Calibration probe: one throwaway capture to measure the true ratio of
     // captured pixels to this frame's CSS pixels (covers devicePixelRatio AND
@@ -454,9 +482,8 @@ window.__ghlShotStart = async function main(opts) {
         // The number that matters: physical px per workflow CSS px. 2 = sharp.
         finalDensity: captureScale * dpr * outScale,
         canvasTransformAtMeasure: getComputedStyle(container).transform,
-        measure: diagnostics,
       };
-      downloadText("ghl-shot-debug.txt", JSON.stringify(debugInfo, null, 1));
+      dumpDebug();
     }
 
     // Warn on the density actually achieved, which the supersampling cap can
@@ -525,6 +552,10 @@ window.__ghlShotStart = async function main(opts) {
   } catch (err) {
     restore();
     console.error("[ghl-shot] capture failed:", err);
+    if (debugInfo) {
+      debugInfo.error = String(err && err.message);
+      dumpDebug();
+    }
     overlay.toast(`GHL Screenshotter: ${err.message}`);
   } finally {
     // Belt and braces: never leave the button dead if restore() was skipped.
