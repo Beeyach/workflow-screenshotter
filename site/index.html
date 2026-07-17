@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <!--
   Landing page for the Workflow Screenshotter extension.
-
-  BEFORE PUBLISHING, replace both placeholders:
-    STORE_URL_PENDING  -> the Chrome Web Store listing URL (after approval)
-  The GitHub links are already live.
+  Matches the Bloomwired site system (bloomwired global css / nav / footer):
+  Instrument Serif headings with <em> emphasis, Instrument Sans body,
+  IBM Plex Mono labels, and the offset-shadow signature.
 -->
 <html lang="en">
   <head>
@@ -18,120 +17,131 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,16..72,400;0,16..72,500;1,16..72,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        --ink: #14141c;
-        --ink-soft: #1c1c26;
-        --plum: #5e3e58;
-        --mauve: #b48ead;
-        --blush: #f5e3e3;
-        --surface: #f7f3f6;
-        --white: #fff;
-        --muted: #6b6472;
-        --line: #e4dde2;
-
-        --display: "Newsreader", Georgia, serif;
-        --body: "Inter", system-ui, -apple-system, sans-serif;
-
-        --pad: clamp(20px, 5vw, 64px);
-        --maxw: 1140px;
+        --bw-ink: #14141c;
+        --bw-ink-soft: #1e1e2a;
+        --bw-body: #3a3545;
+        --bw-muted: #8a8194;
+        --bw-line: #ede8eb;
+        --bw-line-strong: #d8d2d6;
+        --bw-bg: #f7f3f6;
+        --bw-bg-warm: #faf6f8;
+        --bw-paper: #fff;
+        --bw-mauve: #b48ead;
+        --bw-mauve-deep: #8e6a87;
+        --bw-mauve-ink: #5e3e58;
+        --bw-blush: #e8c4d4;
+        --bw-blush-soft: #f4dde6;
+        --bw-blush-bg: #fbeef3;
+        --bw-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+        --font-h: "Instrument Serif", Georgia, serif;
+        --font-b: "Instrument Sans", system-ui, -apple-system, sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
       }
 
-      * { box-sizing: border-box; }
+      *, *::before, *::after { box-sizing: border-box; }
 
       html { scroll-behavior: smooth; }
 
       body {
         margin: 0;
-        background: var(--surface);
-        color: var(--ink);
-        font-family: var(--body);
+        font-family: var(--font-b);
+        color: var(--bw-body);
+        background: var(--bw-bg);
         font-size: 17px;
         line-height: 1.6;
         -webkit-font-smoothing: antialiased;
+        font-synthesis: style; /* Instrument Serif ships one weight; no faux bold */
       }
+      ::selection { background: var(--bw-mauve); color: #fff; }
 
       h1, h2, h3 {
-        font-family: var(--display);
+        font-family: var(--font-h);
         font-weight: 400;
-        letter-spacing: -0.015em;
-        line-height: 1.08;
+        letter-spacing: -0.01em;
+        line-height: 1.04;
+        color: var(--bw-ink);
         margin: 0;
       }
-      h1 { font-size: clamp(38px, 5.4vw, 62px); }
-      h2 { font-size: clamp(30px, 3.6vw, 42px); }
-      h3 { font-size: 20px; }
-      em { font-style: italic; color: var(--plum); }
-
+      h1 { font-size: clamp(40px, 5.6vw, 64px); }
+      h2 { font-size: clamp(30px, 3.8vw, 44px); }
+      h3 { font-size: 21px; }
+      em { font-style: italic; color: var(--bw-mauve-ink); }
       p { margin: 0 0 1em; }
-      a { color: inherit; }
+      a { color: inherit; text-decoration: none; }
 
-      .wrap {
-        max-width: var(--maxw);
-        margin: 0 auto;
-        padding-inline: var(--pad);
-      }
+      .wrap { max-width: 1120px; margin: 0 auto; padding-inline: 32px; }
 
       .eyebrow {
-        font-family: var(--body);
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.14em;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--plum);
-        margin: 0 0 14px;
+        color: var(--bw-mauve-deep);
+        margin: 0 0 16px;
       }
 
-      /* ---------- nav ---------- */
-      nav {
+      /* ---------- nav (mirrors bw-nav) ---------- */
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bw-paper);
+        border-bottom: 1px solid var(--bw-line);
+      }
+      .nav-shell {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 32px;
+        height: 68px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
-        padding-block: 22px;
+        gap: 24px;
       }
-      .logo {
-        font-family: var(--display);
-        font-size: 19px;
-        text-decoration: none;
-        letter-spacing: -0.01em;
+      .nav-brand { display: inline-flex; align-items: center; transition: opacity 0.2s var(--bw-ease); }
+      .nav-brand:hover { opacity: 0.75; }
+      .nav-brand img { height: 22px; width: auto; display: block; }
+      .nav-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bw-ink);
+        color: #fff;
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 4px;
+        border: 1px solid var(--bw-ink);
+        letter-spacing: -0.005em;
+        line-height: 1;
+        transition: transform 0.2s var(--bw-ease), box-shadow 0.2s var(--bw-ease);
       }
-      .logo b { font-weight: 500; }
-      .logo .bloom {
-        display: inline-block;
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--mauve);
-        margin: 0 1px 2px;
-        vertical-align: middle;
-      }
+      .nav-cta:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--bw-mauve); }
+      :focus-visible { outline: 2px solid var(--bw-mauve-deep); outline-offset: 3px; border-radius: 2px; }
 
       /* ---------- buttons ---------- */
       .btn {
         display: inline-flex;
         align-items: center;
         gap: 9px;
-        padding: 13px 22px;
-        border-radius: 999px;
-        background: var(--ink);
-        color: var(--white);
-        text-decoration: none;
+        padding: 14px 24px;
+        border-radius: 4px;
+        background: var(--bw-ink);
+        color: #fff;
         font-size: 15px;
         font-weight: 500;
-        border: 1px solid var(--ink);
-        transition: background 0.18s ease, transform 0.18s ease;
+        border: 1px solid var(--bw-ink);
+        transition: transform 0.2s var(--bw-ease), box-shadow 0.2s var(--bw-ease);
       }
-      .btn:hover { background: var(--plum); border-color: var(--plum); transform: translateY(-1px); }
-      .btn.small { padding: 9px 17px; font-size: 14px; }
-      .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
-      .btn.ghost:hover { background: var(--white); color: var(--ink); border-color: var(--ink); }
-      .btn.invert { background: var(--blush); color: var(--ink); border-color: var(--blush); }
-      .btn.invert:hover { background: var(--white); border-color: var(--white); }
-      :focus-visible { outline: 2px solid var(--mauve); outline-offset: 3px; }
+      .btn:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--bw-mauve); }
+      .btn.ghost { background: transparent; color: var(--bw-ink); border-color: var(--bw-line-strong); }
+      .btn.ghost:hover { border-color: var(--bw-ink); box-shadow: 5px 5px 0 var(--bw-blush); }
 
       /* ---------- hero ---------- */
       .hero {
@@ -139,55 +149,34 @@
         grid-template-columns: 1.05fr 0.95fr;
         gap: clamp(28px, 5vw, 72px);
         align-items: start;
-        padding-block: clamp(28px, 5vw, 60px) 0;
+        padding-block: clamp(40px, 6vw, 76px) 0;
       }
-      .hero-copy { padding-top: clamp(8px, 3vw, 40px); }
-      .hero p.lede {
-        font-size: 19px;
-        color: var(--muted);
-        max-width: 34ch;
-        margin-block: 22px 30px;
-      }
+      .hero-copy { padding-top: clamp(8px, 3vw, 36px); }
+      .hero p.lede { font-size: 19px; color: var(--bw-body); max-width: 34ch; margin-block: 22px 30px; }
       .cta-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-      .fineprint {
-        font-size: 13px;
-        color: var(--muted);
-        margin-top: 16px;
-      }
-      .fineprint span { color: var(--line); margin-inline: 7px; }
+      .fineprint { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; color: var(--bw-muted); margin-top: 18px; }
+      .fineprint span { color: var(--bw-line-strong); margin-inline: 8px; }
 
       /* ---------- the ribbon (signature) ---------- */
-      .capture {
-        position: relative;
-        /* Runs past the fold on purpose: the length is the argument. */
-        height: clamp(420px, 62vh, 620px);
-      }
-      /* The fade lives on an inner wrapper: a mask on .capture would also clip
-         the frame and its labels, which sit outside the ribbon's box. */
+      .capture { position: relative; height: clamp(420px, 62vh, 620px); }
       .ribbon-wrap {
         height: 100%;
         -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
         mask-image: linear-gradient(to bottom, #000 72%, transparent 100%);
       }
-      .ribbon {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 26px;
-        padding-top: 18px;
-      }
+      .ribbon { display: flex; flex-direction: column; align-items: center; gap: 26px; padding-top: 18px; }
       .node {
         position: relative;
-        width: 208px;
-        background: var(--white);
-        border: 1px solid var(--line);
-        border-radius: 9px;
+        width: 210px;
+        background: var(--bw-paper);
+        border: 1px solid var(--bw-line-strong);
+        border-radius: 8px;
         padding: 11px 12px;
         display: flex;
         align-items: center;
         gap: 9px;
         box-shadow: 0 1px 2px rgba(20, 20, 28, 0.05);
-        animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+        animation: rise 0.5s var(--bw-ease) backwards;
       }
       .node::after {
         content: "";
@@ -196,30 +185,24 @@
         left: 50%;
         width: 1px;
         height: 26px;
-        background: var(--line);
+        background: var(--bw-line-strong);
       }
       .node:last-child::after { display: none; }
-      .dot {
-        width: 17px;
-        height: 17px;
-        border-radius: 5px;
-        flex: none;
-        background: var(--mauve);
-      }
-      .dot.plum { background: var(--plum); }
-      .dot.blush { background: var(--blush); border: 1px solid var(--line); }
+      .dot { width: 17px; height: 17px; border-radius: 5px; flex: none; background: var(--bw-mauve); }
+      .dot.plum { background: var(--bw-mauve-ink); }
+      .dot.blush { background: var(--bw-blush); }
       .bars { flex: 1; display: grid; gap: 4px; }
-      .bar { height: 5px; border-radius: 3px; background: #e9e3e8; }
+      .bar { height: 5px; border-radius: 3px; background: var(--bw-bg); }
       .bar.short { width: 52%; }
       .branch { display: flex; gap: 14px; }
-      .branch .node { width: 148px; }
+      .branch .node { width: 150px; }
 
       .cut {
         position: absolute;
         left: -6%;
         right: -6%;
         top: 232px;
-        border-top: 1px dashed var(--mauve);
+        border-top: 1px dashed var(--bw-mauve-deep);
         pointer-events: none;
       }
       .cut::before {
@@ -228,13 +211,25 @@
         top: -9px;
         left: 0;
         transform: translateY(-100%);
+        font-family: var(--font-mono);
         font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: var(--plum);
-        background: var(--surface);
+        color: var(--bw-mauve-deep);
+        background: var(--bw-bg);
         padding-right: 10px;
+      }
+      .tag-captured {
+        position: absolute;
+        top: 292px;
+        left: -6%;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--bw-mauve);
+        white-space: nowrap;
+        pointer-events: none;
       }
       .screen {
         position: absolute;
@@ -242,149 +237,106 @@
         right: -6%;
         top: 0;
         height: 232px;
-        border: 1px solid var(--line);
+        border: 1px solid var(--bw-line-strong);
         border-bottom: none;
-        border-radius: 10px 10px 0 0;
-        background: rgba(255, 255, 255, 0.45);
+        border-radius: 8px 8px 0 0;
+        background: rgba(255, 255, 255, 0.5);
         pointer-events: none;
       }
-      /* A sibling of the ribbon, not a child: anything inside .ribbon-wrap gets
-         clipped by its fade mask. Reads as a sequence with the cut label above:
-         the screen stops, the capture keeps going. */
-      .tag-captured {
-        position: absolute;
-        top: 292px;
-        left: -6%;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--mauve);
-        white-space: nowrap;
-        pointer-events: none;
-      }
-
-      @keyframes rise {
-        from { opacity: 0; transform: translateY(9px); }
-        to { opacity: 1; transform: none; }
-      }
+      @keyframes rise { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
 
       /* ---------- sections ---------- */
-      section { padding-block: clamp(56px, 8vw, 104px); }
+      section { padding-block: clamp(60px, 8vw, 108px); }
       .sec-head { max-width: 46ch; margin-bottom: clamp(28px, 4vw, 48px); }
-      .sec-head p { color: var(--muted); margin-top: 16px; }
+      .sec-head p { color: var(--bw-body); margin-top: 16px; }
 
-      .dark {
-        background: var(--ink);
-        color: var(--blush);
-      }
-      .dark h2 { color: var(--white); }
-      .dark em { color: var(--mauve); }
+      .dark { background: var(--bw-ink); }
+      .dark h2 { color: #fff; }
+      .dark em { color: var(--bw-mauve); }
       .dark p { color: #b9b2be; }
-      .dark .eyebrow { color: var(--mauve); }
+      .dark .eyebrow { color: var(--bw-mauve); }
 
       /* ---------- steps ---------- */
-      .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-      .step { background: var(--surface); padding: 26px 24px 30px; }
-      .step .num {
-        font-family: var(--display);
-        font-size: 15px;
-        color: var(--mauve);
-        display: block;
-        margin-bottom: 12px;
+      .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+      .step {
+        background: var(--bw-paper);
+        border: 1px solid var(--bw-ink);
+        border-radius: 8px;
+        padding: 24px 22px 28px;
+        box-shadow: 5px 5px 0 var(--bw-blush-soft);
       }
+      .step .num { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bw-mauve-deep); display: block; margin-bottom: 14px; }
       .step h3 { margin-bottom: 7px; }
-      .step p { color: var(--muted); font-size: 15px; margin: 0; }
+      .step p { color: var(--bw-muted); font-size: 15px; margin: 0; }
 
       /* ---------- uses ---------- */
-      .uses { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 30px; padding: 0; margin: 0; list-style: none; }
-      .uses li {
-        padding: 15px 0;
-        border-top: 1px solid var(--line);
-        display: flex;
-        gap: 12px;
-        align-items: baseline;
-      }
-      .uses li::before {
-        content: "";
-        width: 5px; height: 5px; border-radius: 50%;
-        background: var(--mauve);
-        flex: none;
-        transform: translateY(-2px);
-      }
+      .uses { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 34px; padding: 0; margin: 0; list-style: none; }
+      .uses li { padding: 15px 0; border-top: 1px solid var(--bw-line); display: flex; gap: 12px; align-items: baseline; color: var(--bw-body); }
+      .uses li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--bw-mauve); flex: none; transform: translateY(-2px); }
 
-      /* ---------- privacy ---------- */
-      .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 12px; }
+      /* ---------- privacy facts ---------- */
+      .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 12px; }
       .fact { border-top: 1px solid #2e2e3a; padding-top: 18px; }
-      .fact strong {
-        display: block;
-        font-family: var(--display);
-        font-size: 27px;
-        font-weight: 400;
-        color: var(--white);
-        margin-bottom: 6px;
-      }
+      .fact strong { display: block; font-family: var(--font-h); font-size: 28px; font-weight: 400; color: #fff; margin-bottom: 6px; }
       .fact span { font-size: 14px; color: #b9b2be; }
+      .fact a { color: var(--bw-mauve); border-bottom: 1px solid rgba(180, 142, 173, 0.4); }
 
       /* ---------- faq ---------- */
-      .faq { border-top: 1px solid var(--line); }
-      details { border-bottom: 1px solid var(--line); }
-      summary {
-        cursor: pointer;
-        padding: 19px 34px 19px 0;
-        font-weight: 500;
-        list-style: none;
-        position: relative;
-      }
+      details { border-bottom: 1px solid var(--bw-line); }
+      details:first-of-type { border-top: 1px solid var(--bw-line); }
+      summary { cursor: pointer; padding: 20px 36px 20px 0; font-weight: 500; color: var(--bw-ink); list-style: none; position: relative; }
       summary::-webkit-details-marker { display: none; }
-      summary::after {
-        content: "+";
-        position: absolute;
-        right: 4px;
-        top: 17px;
-        font-size: 19px;
-        color: var(--mauve);
-      }
+      summary::after { content: "+"; position: absolute; right: 4px; top: 17px; font-size: 20px; color: var(--bw-mauve-deep); }
       details[open] summary::after { content: "\2013"; }
-      details p { color: var(--muted); margin: 0 0 19px; max-width: 62ch; }
+      details p { color: var(--bw-body); margin: 0 0 20px; max-width: 62ch; }
 
       /* ---------- closing ---------- */
       .close-cta { text-align: center; }
-      .close-cta p { color: var(--muted); max-width: 42ch; margin-inline: auto; }
+      .close-cta p { color: var(--bw-body); max-width: 42ch; margin-inline: auto; }
       .agency {
-        border-top: 1px solid var(--line);
-        padding-block: 40px;
+        border: 1px solid var(--bw-ink);
+        border-radius: 8px;
+        box-shadow: 6px 6px 0 var(--bw-mauve);
+        background: var(--bw-paper);
+        padding: 28px 30px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 20px;
         flex-wrap: wrap;
       }
-      .agency p { margin: 0; color: var(--muted); max-width: 48ch; font-size: 15px; }
-      .agency a { color: var(--plum); font-weight: 500; }
+      .agency p { margin: 0; color: var(--bw-body); max-width: 48ch; font-size: 15px; }
+      .agency a { color: var(--bw-mauve-ink); font-weight: 500; border-bottom: 1px solid var(--bw-mauve); }
 
-      footer {
-        padding-block: 28px 44px;
-        font-size: 12.5px;
-        color: var(--muted);
+      /* ---------- footer ---------- */
+      footer.site {
+        background: var(--bw-paper);
+        border-top: 1px solid var(--bw-line);
+      }
+      .foot-shell {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 34px 32px 40px;
         display: flex;
         justify-content: space-between;
-        gap: 16px;
+        align-items: center;
+        gap: 20px;
         flex-wrap: wrap;
       }
-      footer a { color: var(--muted); }
+      .foot-brand img { height: 20px; width: auto; display: block; }
+      .foot-links { display: flex; gap: 22px; font-size: 13px; }
+      .foot-links a { color: var(--bw-muted); }
+      .foot-links a:hover { color: var(--bw-ink); }
+      .foot-legal { font-family: var(--font-mono); font-size: 11px; color: var(--bw-muted); max-width: 42ch; line-height: 1.5; }
 
       /* ---------- responsive ---------- */
       @media (max-width: 900px) {
         .hero { grid-template-columns: 1fr; }
         .capture { height: 400px; order: 2; }
         .steps, .facts { grid-template-columns: 1fr; }
-        .steps { border-radius: 10px; }
         .uses { grid-template-columns: 1fr; }
-        .cut::before { font-size: 10px; }
-        .below::before { display: none; }
+        .nav-cta { display: none; }
       }
-
       @media (prefers-reduced-motion: reduce) {
         html { scroll-behavior: auto; }
         * { animation: none !important; transition: none !important; }
@@ -392,14 +344,21 @@
     </style>
   </head>
   <body>
-    <div class="wrap">
-      <nav>
-        <a class="logo" href="https://bloomwired.io"
-          >bl<span class="bloom"></span><b>mwired</b></a
-        >
-        <a class="btn small" href="STORE_URL_PENDING">Add to Chrome</a>
-      </nav>
+    <nav class="nav">
+      <div class="nav-shell">
+        <a class="nav-brand" href="https://bloomwired.io/" aria-label="Bloomwired home">
+          <img
+            src="https://assets.cdn.filesafe.space/kJQMJeYwaVwQu7QqURzT/media/69c2f4a0f5a389da87a1f992.png"
+            alt="Bloomwired"
+            width="600"
+            height="87"
+          />
+        </a>
+        <a class="nav-cta" href="https://chromewebstore.google.com/detail/workflow-screenshotter/ghhhopbjapndnpbfaeamoncdlaihkbie">Add to Chrome</a>
+      </div>
+    </nav>
 
+    <div class="wrap">
       <header class="hero">
         <div class="hero-copy">
           <p class="eyebrow">Free Chrome extension</p>
@@ -409,56 +368,48 @@
             including the ones scrolled off screen.
           </p>
           <div class="cta-row">
-            <a class="btn" href="STORE_URL_PENDING">Add to Chrome. It's free</a>
+            <a class="btn" href="https://chromewebstore.google.com/detail/workflow-screenshotter/ghhhopbjapndnpbfaeamoncdlaihkbie">Add to Chrome. It's free</a>
             <a class="btn ghost" href="#how">See how it works</a>
           </div>
-          <p class="fineprint">
-            No account <span>/</span> No tracking <span>/</span> Open source
-          </p>
+          <p class="fineprint">No account <span>/</span> No tracking <span>/</span> Open source</p>
         </div>
 
-        <!-- Signature: the workflow runs past the frame, because that is the point. -->
         <div class="capture" aria-hidden="true">
           <div class="screen"></div>
           <div class="cut"></div>
           <span class="tag-captured">captured anyway</span>
           <div class="ribbon-wrap">
-          <div class="ribbon">
-            <div class="node" style="animation-delay: 0.02s">
-              <span class="dot plum"></span>
-              <span class="bars"><span class="bar"></span><span class="bar short"></span></span>
-            </div>
-            <div class="node" style="animation-delay: 0.08s">
-              <span class="dot"></span>
-              <span class="bars"><span class="bar short"></span></span>
-            </div>
-            <div class="node" style="animation-delay: 0.14s">
-              <span class="dot blush"></span>
-              <span class="bars"><span class="bar"></span><span class="bar short"></span></span>
-            </div>
-            <div class="branch">
-              <div class="node" style="animation-delay: 0.2s">
-                <span class="dot"></span>
-                <span class="bars"><span class="bar short"></span></span>
-              </div>
-              <div class="node" style="animation-delay: 0.24s">
+            <div class="ribbon">
+              <div class="node" style="animation-delay: 0.02s">
                 <span class="dot plum"></span>
-                <span class="bars"><span class="bar short"></span></span>
+                <span class="bars"><span class="bar"></span><span class="bar short"></span></span>
+              </div>
+              <div class="node" style="animation-delay: 0.08s">
+                <span class="dot"></span><span class="bars"><span class="bar short"></span></span>
+              </div>
+              <div class="node" style="animation-delay: 0.14s">
+                <span class="dot blush"></span>
+                <span class="bars"><span class="bar"></span><span class="bar short"></span></span>
+              </div>
+              <div class="branch">
+                <div class="node" style="animation-delay: 0.2s">
+                  <span class="dot"></span><span class="bars"><span class="bar short"></span></span>
+                </div>
+                <div class="node" style="animation-delay: 0.24s">
+                  <span class="dot plum"></span><span class="bars"><span class="bar short"></span></span>
+                </div>
+              </div>
+              <div class="node" style="animation-delay: 0.3s">
+                <span class="dot blush"></span>
+                <span class="bars"><span class="bar"></span><span class="bar short"></span></span>
+              </div>
+              <div class="node" style="animation-delay: 0.36s">
+                <span class="dot"></span><span class="bars"><span class="bar short"></span></span>
+              </div>
+              <div class="node" style="animation-delay: 0.42s">
+                <span class="dot plum"></span><span class="bars"><span class="bar"></span></span>
               </div>
             </div>
-            <div class="node" style="animation-delay: 0.3s">
-              <span class="dot blush"></span>
-              <span class="bars"><span class="bar"></span><span class="bar short"></span></span>
-            </div>
-            <div class="node" style="animation-delay: 0.36s">
-              <span class="dot"></span>
-              <span class="bars"><span class="bar short"></span></span>
-            </div>
-            <div class="node" style="animation-delay: 0.42s">
-              <span class="dot plum"></span>
-              <span class="bars"><span class="bar"></span></span>
-            </div>
-          </div>
           </div>
         </div>
       </header>
@@ -555,12 +506,8 @@
           </div>
           <div class="fact">
             <strong>All of the code</strong>
-            <span
-              >Public, so you can read it before you install it.
-              <a href="https://github.com/Beeyach/workflow-screenshotter" style="color: var(--mauve)"
-                >See the source</a
-              >.</span
-            >
+            <span>Public, so you can read it before you install it.
+              <a href="https://github.com/Beeyach/workflow-screenshotter">See the source</a>.</span>
           </div>
         </div>
       </div>
@@ -572,74 +519,86 @@
           <p class="eyebrow">Questions</p>
           <h2>Before you install it</h2>
         </div>
-        <div class="faq">
-          <details>
-            <summary>Is it really free?</summary>
-            <p>Yes. No paid tier, no trial, no upsell.</p>
-          </details>
-          <details>
-            <summary>Does it work on my whitelabel domain?</summary>
-            <p>Yes. The builder is the same underneath, so custom domains work.</p>
-          </details>
-          <details>
-            <summary>Does it work with Zapier, Make, or n8n?</summary>
-            <p>No. GoHighLevel workflows only.</p>
-          </details>
-          <details>
-            <summary>What about very long workflows?</summary>
-            <p>
-              Those are the ones it's for. Long workflows take longer because it
-              captures in sections, and you'll see the progress while it runs.
-            </p>
-          </details>
-          <details>
-            <summary>Can I get a bigger image for printing?</summary>
-            <p>
-              Yes. There's a size setting in the popup. Normal matches what you
-              see on screen. 2x and 3x are there if you need to zoom in or print.
-            </p>
-          </details>
-          <details>
-            <summary>Who made this?</summary>
-            <p>
-              We did. We build booking and follow-up systems in GoHighLevel, and
-              we got tired of screenshotting workflows by hand.
-            </p>
-          </details>
-        </div>
+        <details>
+          <summary>Is it really free?</summary>
+          <p>Yes. No paid tier, no trial, no upsell.</p>
+        </details>
+        <details>
+          <summary>Does it work on my whitelabel domain?</summary>
+          <p>Yes. The builder is the same underneath, so custom domains work.</p>
+        </details>
+        <details>
+          <summary>Does it work with Zapier, Make, or n8n?</summary>
+          <p>No. GoHighLevel workflows only.</p>
+        </details>
+        <details>
+          <summary>What about very long workflows?</summary>
+          <p>
+            Those are the ones it's for. Long workflows take longer because it
+            captures in sections, and you'll see the progress while it runs.
+          </p>
+        </details>
+        <details>
+          <summary>Can I get a bigger image for printing?</summary>
+          <p>
+            Yes. There's a size setting in the popup. Normal matches what you see
+            on screen. 2x and 3x are there if you need to zoom in or print.
+          </p>
+        </details>
+        <details>
+          <summary>Who made this?</summary>
+          <p>
+            We did. We build booking and follow-up systems in GoHighLevel, and we
+            got tired of screenshotting workflows by hand.
+          </p>
+        </details>
       </div>
     </section>
 
     <section class="close-cta" style="padding-top: 0">
       <div class="wrap">
         <h2>Add it and go screenshot something</h2>
-        <p style="margin-block: 18px 28px">
-          It's free and takes about ten seconds to install.
-        </p>
-        <a class="btn" href="STORE_URL_PENDING">Add to Chrome</a>
-        <p class="fineprint" style="margin-top: 20px">
+        <p style="margin-block: 18px 30px">It's free and takes about ten seconds to install.</p>
+        <a class="btn" href="https://chromewebstore.google.com/detail/workflow-screenshotter/ghhhopbjapndnpbfaeamoncdlaihkbie">Add to Chrome</a>
+        <p class="fineprint" style="margin-top: 22px">
           Found a bug, or GoHighLevel changed something?
-          <a href="https://github.com/Beeyach/workflow-screenshotter/issues">Tell us here</a>.
+          <a href="https://github.com/Beeyach/workflow-screenshotter/issues" style="color: var(--bw-mauve-ink); border-bottom: 1px solid var(--bw-mauve)">Tell us here</a>.
         </p>
       </div>
     </section>
 
-    <div class="wrap">
-      <div class="agency">
-        <p>
-          We're Bloomwired. We build the booking and follow-up systems these
-          workflows run on, for small service businesses.
-        </p>
-        <a href="https://bloomwired.io">See what we do &rarr;</a>
+    <section style="padding-top: 0">
+      <div class="wrap">
+        <div class="agency">
+          <p>
+            We're Bloomwired. We build the booking and follow-up systems these
+            workflows run on, for small service businesses.
+          </p>
+          <a href="https://bloomwired.io">See what we do &rarr;</a>
+        </div>
       </div>
-      <footer>
-        <span>&copy; 2026 Bloomwired <span style="color: var(--line)">/</span>
-          <a href="/privacy-policy">Privacy policy</a></span>
-        <span>
+    </section>
+
+    <footer class="site">
+      <div class="foot-shell">
+        <a class="foot-brand" href="https://bloomwired.io/" aria-label="Bloomwired home">
+          <img
+            src="https://assets.cdn.filesafe.space/kJQMJeYwaVwQu7QqURzT/media/69c2f4a0f5a389da87a1f992.png"
+            alt="Bloomwired"
+            width="600"
+            height="87"
+          />
+        </a>
+        <div class="foot-links">
+          <a href="https://bloomwired.io">Home</a>
+          <a href="/privacy-policy">Privacy policy</a>
+          <a href="https://github.com/Beeyach/workflow-screenshotter">Source</a>
+        </div>
+        <p class="foot-legal">
           Not affiliated with, endorsed by, or sponsored by HighLevel, Inc.
           HighLevel is a trademark of HighLevel, Inc.
-        </span>
-      </footer>
-    </div>
+        </p>
+      </div>
+    </footer>
   </body>
 </html>

@@ -9,83 +9,122 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@16..72,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <style>
       :root {
-        --ink: #14141c;
-        --plum: #5e3e58;
-        --mauve: #b48ead;
-        --surface: #f7f3f6;
-        --muted: #6b6472;
-        --line: #e4dde2;
+        --bw-ink: #14141c;
+        --bw-body: #3a3545;
+        --bw-muted: #8a8194;
+        --bw-line: #ede8eb;
+        --bw-line-strong: #d8d2d6;
+        --bw-bg: #f7f3f6;
+        --bw-paper: #fff;
+        --bw-mauve: #b48ead;
+        --bw-mauve-deep: #8e6a87;
+        --bw-mauve-ink: #5e3e58;
+        --bw-blush-soft: #f4dde6;
+        --bw-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+        --font-h: "Instrument Serif", Georgia, serif;
+        --font-b: "Instrument Sans", system-ui, -apple-system, sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
       }
-      * { box-sizing: border-box; }
+      *, *::before, *::after { box-sizing: border-box; }
       body {
         margin: 0;
-        background: var(--surface);
-        color: var(--ink);
-        font-family: "Inter", system-ui, sans-serif;
+        background: var(--bw-bg);
+        color: var(--bw-body);
+        font-family: var(--font-b);
         font-size: 16px;
         line-height: 1.65;
         -webkit-font-smoothing: antialiased;
+        font-synthesis: style;
       }
-      .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 80px; }
-      nav { padding-block: 22px; }
-      .logo { font-family: "Newsreader", Georgia, serif; font-size: 19px; text-decoration: none; color: var(--ink); }
-      .logo b { font-weight: 500; }
-      .logo .bloom {
-        display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-        background: var(--mauve); margin: 0 1px 2px; vertical-align: middle;
+      ::selection { background: var(--bw-mauve); color: #fff; }
+      a { color: var(--bw-mauve-ink); text-decoration: none; border-bottom: 1px solid var(--bw-mauve); }
+      a:hover { color: var(--bw-mauve-deep); }
+
+      .nav {
+        background: var(--bw-paper);
+        border-bottom: 1px solid var(--bw-line);
       }
+      .nav-shell {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 32px;
+        height: 68px;
+        display: flex;
+        align-items: center;
+      }
+      .nav-brand { display: inline-flex; align-items: center; border: none; }
+      .nav-brand:hover { opacity: 0.75; }
+      .nav-brand img { height: 22px; width: auto; display: block; }
+
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 32px 80px; }
+
       h1 {
-        font-family: "Newsreader", Georgia, serif;
+        font-family: var(--font-h);
         font-weight: 400;
-        font-size: clamp(32px, 5vw, 44px);
-        line-height: 1.1;
-        letter-spacing: -0.015em;
-        margin: 28px 0 6px;
+        font-size: clamp(34px, 5vw, 46px);
+        line-height: 1.05;
+        letter-spacing: -0.01em;
+        color: var(--bw-ink);
+        margin: 40px 0 6px;
       }
-      .updated { color: var(--muted); font-size: 14px; margin: 0 0 34px; }
+      .updated { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.03em; color: var(--bw-muted); margin: 0 0 34px; }
       h2 {
-        font-family: "Newsreader", Georgia, serif;
+        font-family: var(--font-h);
         font-weight: 400;
-        font-size: 24px;
-        margin: 38px 0 10px;
+        font-size: 25px;
+        color: var(--bw-ink);
+        margin: 40px 0 10px;
       }
       p { margin: 0 0 14px; }
       ul { margin: 0 0 14px; padding-left: 20px; }
-      li { margin-bottom: 7px; }
-      a { color: var(--plum); }
+      li { margin-bottom: 8px; }
+      li::marker { color: var(--bw-mauve); }
+      strong { color: var(--bw-ink); font-weight: 600; }
+
       .callout {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-left: 3px solid var(--mauve);
+        background: var(--bw-paper);
+        border: 1px solid var(--bw-ink);
         border-radius: 8px;
-        padding: 18px 20px;
-        margin: 26px 0;
+        box-shadow: 6px 6px 0 var(--bw-blush-soft);
+        padding: 20px 22px;
+        margin: 26px 0 6px;
       }
       .callout p:last-child { margin: 0; }
+
       footer {
-        border-top: 1px solid var(--line);
+        border-top: 1px solid var(--bw-line);
         margin-top: 54px;
         padding-top: 22px;
-        font-size: 13px;
-        color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 1.6;
+        color: var(--bw-muted);
       }
+      footer a { color: var(--bw-muted); border: none; text-decoration: underline; }
     </style>
   </head>
   <body>
-    <div class="wrap">
-      <nav>
-        <a class="logo" href="https://bloomwired.io"
-          >bl<span class="bloom"></span><b>mwired</b></a
-        >
-      </nav>
+    <nav class="nav">
+      <div class="nav-shell">
+        <a class="nav-brand" href="https://bloomwired.io/" aria-label="Bloomwired home">
+          <img
+            src="https://assets.cdn.filesafe.space/kJQMJeYwaVwQu7QqURzT/media/69c2f4a0f5a389da87a1f992.png"
+            alt="Bloomwired"
+            width="600"
+            height="87"
+          />
+        </a>
+      </div>
+    </nav>
 
+    <div class="wrap">
       <h1>Privacy Policy</h1>
-      <p class="updated">Workflow Screenshotter (Chrome extension). Last updated 16 July 2026.</p>
+      <p class="updated">Workflow Screenshotter (Chrome extension) · Last updated 16 July 2026</p>
 
       <div class="callout">
         <p>
@@ -183,7 +222,7 @@
           Not affiliated with, endorsed by, or sponsored by HighLevel, Inc.
           HighLevel is a trademark of HighLevel, Inc.
         </p>
-        <p>&copy; 2026 Bloomwired</p>
+        <p>&copy; 2026 Bloomwired · <a href="/">Workflow Screenshotter</a></p>
       </footer>
     </div>
   </body>
